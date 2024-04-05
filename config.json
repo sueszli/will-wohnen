@@ -10,5 +10,6 @@
     "good_words": [
         "neubau"
     ],
+    "vienna_surroundings": true,
     "request_delay_in_ms": 3000
 }
