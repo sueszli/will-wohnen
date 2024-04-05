@@ -3,6 +3,7 @@
         "from": 1,
         "to": 150000
     },
+    "vienna_surroundings": true,
     "bad_words": [
         "unbefristet vermietet",
         "sanierungsbedürftig"
@@ -10,6 +11,5 @@
     "good_words": [
         "neubau"
     ],
-    "vienna_surroundings": true,
     "request_delay_in_ms": 3000
 }
