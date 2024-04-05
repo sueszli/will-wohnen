@@ -4,17 +4,13 @@ stats for testing: buying apartment in vienna for <150k EUR
 
 # best websites
 
-> conclusion: willhaben and immoscout are the most popular real estate websites in austria.
->
-> the quality of advertisements on willhaben are significantly higher than on immoscout.
-
 - willhaben
-	- 435 options
-	- traffic val: 1.7 million 🔥
+	- 435 options 🔥 → high quality data
+	- traffic val: 1.7 million 🔥 → almost exclusively from austria
 	- https://www.willhaben.at/iad/immobilien/eigentumswohnung/eigentumswohnung-angebote?sfId=24d847d2-4099-4c01-a217-d190e27b624f&areaId=900&rows=30&isNavigation=true&sort=3&page=1&PRICE_FROM=50000&PRICE_TO=150000
 - immoscout
-	- 292 options
-	- traffic val: 9.1 million 🔥 (but mostly from germany)
+	- 292 options → quality of ads and popularity significantly lower than willhaben
+	- traffic val: 9.1 million 🔥 → mainly from germany
 	- https://www.immobilienscout24.de/Suche/radius/wohnung-kaufen?centerofsearchaddress=Wien;;;;;;&rented=false&price=1.0-150000.0&geocoordinates=48.21931;16.38594;20.0&sorting=4
 
 # excluded
