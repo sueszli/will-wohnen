@@ -5,7 +5,7 @@ stats for testing: buying apartment in vienna for <150k EUR
 # best websites
 
 - willhaben
-	- 435 options 🔥 → high quality data
+	- 435 options 🔥 → best quality
 	- traffic val: 1.7 million 🔥 → almost exclusively from austria
 	- https://www.willhaben.at/iad/immobilien/eigentumswohnung/eigentumswohnung-angebote?sfId=24d847d2-4099-4c01-a217-d190e27b624f&areaId=900&rows=30&isNavigation=true&sort=3&page=1&PRICE_FROM=50000&PRICE_TO=150000
 - immoscout
