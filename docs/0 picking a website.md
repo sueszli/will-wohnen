@@ -2,6 +2,8 @@ traffic estimated with: https://ahrefs.com/traffic-checker
 
 stats for testing: buying apartment in vienna for <150k EUR
 
+# best websites
+
 > conclusion: willhaben and immoscout are the most popular real estate websites in austria.
 >
 > the quality of advertisements on willhaben are significantly higher than on immoscout.
