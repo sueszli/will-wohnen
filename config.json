@@ -1,0 +1,14 @@
+{
+    "price_range": {
+        "from": 1,
+        "to": 150000
+    },
+    "bad_words": [
+        "unbefristet vermietet",
+        "sanierungsbedürftig"
+    ],
+    "good_words": [
+        "neubau"
+    ],
+    "request_delay_in_ms": 3000
+}
