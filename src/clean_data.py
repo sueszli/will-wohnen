@@ -151,3 +151,8 @@ def get_cleaned_data() -> pd.DataFrame:
     df = df[df["price"] < 150_000]
 
     return df
+
+
+if __name__ == "__main__":
+    df = get_cleaned_data()
+    print(df.head())
