@@ -117,8 +117,8 @@ def dump_pages(pages: dict) -> None:
     curr_time = time.strftime("%Y-%m-%d_%H-%M-%S")
     path = os.path.join(parent_dir, "data", f"pages_{curr_time}.json")
 
-    with open(path, "w") as f:
-        json.dump(pages, f, indent=4)
+    f = open(path, "w")
+    json.dump(pages, f, indent=4, ensure_ascii=False)
 
 
 async def fetch_async(url: str) -> str:
@@ -136,7 +136,18 @@ async def main():
     links = load_links()
 
     print("running async fetches...")
-    tasks = [fetch_async(url) for url in links]
+
+    # tasks without delay:
+    # tasks = [fetch_async(url) for url in links]
+
+    # task with delay:
+    tasks = []
+    for i, url in enumerate(links):
+        tasks.append(fetch_async(url))
+        print(f"fetching page {i + 1}/{len(links)}")
+        if i % 5 == 0:
+            await asyncio.sleep(0.5)
+
     results = await asyncio.gather(*tasks)
 
     print("parsing all pages...")

@@ -10,17 +10,22 @@ from urllib.parse import urljoin
 import asyncio
 import aiohttp
 
+CONFIG = {
+    "price_range": {
+        "from": 20000,
+        "to": 150000,
+    },
+    "suburbs": True,
+}
+
 
 def get_init_url() -> str:
-    assert os.path.exists("config.json"), "config.json not found"
-    config = json.load(open("config.json"))
-
     URL = "https://www.willhaben.at/iad/immobilien/eigentumswohnung/eigentumswohnung-angebote?"
     URL += "rows=5"  #  5 ads per page, avoid buffered page loading
     URL += "&areaId=900"  # vienna
-    URL += "" if not config["suburbs"] else "&areaId=312&areaId=319&areaId=321"  # st.pölten land, tulln, korneuburg
-    URL += f"&PRICE_FROM={config['price_range']['from']}"
-    URL += f"&PRICE_TO={config['price_range']['to']}"
+    URL += "" if not CONFIG["suburbs"] else "&areaId=312&areaId=319&areaId=321"  # st.pölten land, tulln, korneuburg
+    URL += f"&PRICE_FROM={CONFIG['price_range']['from']}"
+    URL += f"&PRICE_TO={CONFIG['price_range']['to']}"
     return URL
 
 
