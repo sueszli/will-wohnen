@@ -54,11 +54,12 @@ def parse_links(html: str) -> List[str]:
 
 def dump_links(links: set[str]) -> None:
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if not os.path.exists(os.path.join(parent_dir, "data")):
-        os.makedirs(os.path.join(parent_dir, "data"))
+    data_dir = os.path.join(parent_dir, "data")
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
 
     curr_time = time.strftime("%Y-%m-%d_%H-%M-%S")
-    path = os.path.join(parent_dir, "data", f"links_{curr_time}.csv")
+    path = os.path.join(data_dir, f"links_{curr_time}.csv")
 
     with open(path, "w") as f:
         f.write("\n".join(links))

@@ -158,4 +158,5 @@ async def main():
     dump_pages(flat_pages)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
