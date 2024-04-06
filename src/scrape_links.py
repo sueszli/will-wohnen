@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 import asyncio
 import aiohttp
 
+
 CONFIG = {
     "price_range": {
         "from": 20000,
