@@ -128,6 +128,15 @@ def clean_attributes(df: pd.DataFrame):
     df.drop(columns=["attributes"], inplace=True)
 
 
+def remove_outliers(df: pd.DataFrame):
+    # too expensive
+    df = df[df["price"] < 150_000]
+
+    # too far away
+
+    return df
+
+
 def get_cleaned_data() -> pd.DataFrame:
     print("cleaning data...")
 
@@ -136,19 +145,17 @@ def get_cleaned_data() -> pd.DataFrame:
 
     df["title"] = df["title"].apply(lambda x: x.strip().lower())
     df["descriptions"] = df["descriptions"].apply(lambda x: x["description_general"].strip().lower())
+    df.drop(columns=["energy_certificate"], inplace=True)
 
     clean_last_change(df)
     clean_price(df)
     clean_address(df)
     clean_attributes(df)
 
-    df.drop(columns=["energy_certificate"], inplace=True)
-
-    df = df[df["price"] < 150_000]
+    df = remove_outliers(df)
 
     return df
 
 
-if __name__ == "__main__":
-    df = get_cleaned_data()
-    print(df.head())
+df = get_cleaned_data()
+print(df.head())
