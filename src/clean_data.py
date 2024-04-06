@@ -1,5 +1,6 @@
 import os
 import json
+import itertools
 
 import pandas as pd
 
@@ -21,16 +22,21 @@ def read_latest_pages() -> dict:
     return dic
 
 
-def get_url(i: int, df: pd.DataFrame) -> str:
-    url = df.iloc[i]["url"]
-    return url
-
-
 # -------------------------------------------------------------------------------------------------------- cleaning
 
 
-def clean_last_change(df: pd.DataFrame):
-    # last update ✅
+def clean_descriptions(df: pd.DataFrame):  # TESTED
+    descriptions = []
+    for i in range(len(df)):
+        desc = df.iloc[i]["descriptions"]
+        vals = [v for v in list(desc.values()) if v]
+        merged = " ".join(vals)
+        merged = merged.strip().lower()
+        descriptions.append(merged)
+    df["descriptions"] = descriptions
+
+
+def clean_last_change(df: pd.DataFrame):  # TESTED
     lcs = []
     for i in range(len(df)):
         lc = df.iloc[i]["last_change"].strip().lower()
@@ -42,8 +48,7 @@ def clean_last_change(df: pd.DataFrame):
     df["last_change"] = lcs
 
 
-def clean_price(df: pd.DataFrame):
-    # get price ✅
+def clean_price(df: pd.DataFrame):  # TESTED
     prices = []
     for i in range(len(df)):
         price = df.iloc[i]["price_info"]["Kaufpreis"]
@@ -52,16 +57,14 @@ def clean_price(df: pd.DataFrame):
         prices.append(price)
     df["price"] = prices
 
-    # broker ✅
-    has_broker_commission = []
-    for i in range(len(df)):
-        bc = df.iloc[i]["price_info"]
-        bc_keys = [k.strip().lower() for k in bc.keys()]
-        has_bc = any(["provision" in k for k in bc_keys])
-        has_broker_commission.append(has_bc)
-        if has_broker_commission:
-            print(df.iloc[i]["url"])
-    df["broker"] = has_broker_commission
+    ## don't derive: they all have brokers
+    # has_broker = []
+    # for i in range(len(df)):
+    #     bk = df.iloc[i]["price_info"]
+    #     bk_keys = [k.strip().lower() for k in bk.keys()]
+    #     has_bk = any(["provision" in k for k in [k.strip().lower() for k in bk.keys()]])
+    #     has_broker.append(has_bk)
+    # df["broker"] = has_broker
 
     df.drop(columns=["price_info"], inplace=True)
 
@@ -142,6 +145,9 @@ def clean_attributes(df: pd.DataFrame):
     df.drop(columns=["attributes"], inplace=True)
 
 
+# -------------------------------------------------------------------------------------------------------- filtering rows
+
+
 def remove_outliers(df: pd.DataFrame):
     # too expensive
     df = df[df["price"] < 150_000]
@@ -171,8 +177,7 @@ def get_cleaned_data() -> pd.DataFrame:
     df = pd.DataFrame(dic).T
 
     df["title"] = df["title"].apply(lambda x: x.strip().lower())
-    df["descriptions"] = df["descriptions"].apply(lambda x: x["description_general"].strip().lower())
-
+    clean_descriptions(df)
     clean_last_change(df)
     clean_price(df)
     clean_address(df)
