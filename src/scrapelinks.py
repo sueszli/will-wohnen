@@ -1,6 +1,4 @@
 import os
-import sys
-import itertools
 import json
 from typing import List
 
@@ -26,12 +24,6 @@ def get_init_url() -> str:
     return URL
 
 
-def get_rate_limit() -> int:
-    assert os.path.exists("config.json"), "config.json not found"
-    config = json.load(open("config.json"))
-    return config["rate_limit_delay_ms"]
-
-
 def get_total_ads(url: str) -> int:
     response = requests.get(url)
     assert response.status_code == 200, f"status code: {response.status_code}"
@@ -40,11 +32,6 @@ def get_total_ads(url: str) -> int:
     elem = soup.find("h1", {"data-testid": "result-list-title"})
     assert elem
     return int(elem.text.split()[0])
-
-
-def set_user_agent() -> None:
-    os.environ["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-    os.environ["HTTP_ACCEPT_LANGUAGE"] = "en-US,en;q=0.5"
 
 
 def parse_links(html: str) -> List[str]:
@@ -67,18 +54,20 @@ def dump_links(links: set[str]) -> None:
 
     curr_time = time.strftime("%Y-%m-%d_%H-%M-%S")
     path = os.path.join(parent_dir, "data", f"links_{curr_time}.csv")
+
     with open(path, "w") as f:
         f.write("\n".join(links))
 
 
 async def main():
+    os.environ["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+
     async def fetch_async(url: str) -> str:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 assert response.status == 200, f"status code: {response.status}"
                 return await response.text()
 
-    set_user_agent()
     url = get_init_url()
     total_count = get_total_ads(url)
 
