@@ -19,22 +19,20 @@ def read_latest_pages() -> dict:
 
 
 def clean_last_change(df: pd.DataFrame):
-    # get as parsed pd.Timestamp
-
+    # last update as pd.Timestamp
     lcs = []
     for i in range(len(df)):
         lc = df.iloc[i]["last_change"].strip().lower()
         lc = lc.split(" ")[2:4]
         lc[0] = lc[0].replace(",", "")
         lc = " ".join(lc)
-        lc = pd.to_datetime(lc)
+        lc = pd.to_datetime(lc, format="%d.%m.%Y %H:%M")
         lcs.append(lc)
-    df["last_change"] = lc
+    df["last_change"] = lcs
 
 
 def clean_price(df: pd.DataFrame):
     # get price, has_broker_commission
-
     prices = []
     for i in range(len(df)):
         price = df.iloc[i]["price_info"]["Kaufpreis"]
@@ -56,7 +54,6 @@ def clean_price(df: pd.DataFrame):
 
 def clean_address(df: pd.DataFrame):
     # get district
-
     districts = []
     for i in range(len(df)):
         address = df.iloc[i]["address"].strip()
@@ -72,7 +69,6 @@ def clean_address(df: pd.DataFrame):
 
 def clean_attributes(df: pd.DataFrame):
     # get neubau, area, num_rooms, needs_renovation
-
     neubau = []
     areas = []
     num_rooms = []
