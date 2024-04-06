@@ -133,6 +133,19 @@ def remove_outliers(df: pd.DataFrame):
     df = df[df["price"] < 150_000]
 
     # too far away
+    # fmt: off
+    valid_districts = [
+        1210, 2100, 2103, # korneuburg, langenzersdorf
+        2100, 2102, # korneuburg, bisamberg
+        2102, 2201, 2202, # korneuburg, hagenbrunn
+        2201, # korneuburg, gerasdorf bei wien
+        1140, 3400, 3420, 3421, # st.pölten land, purkersdorf
+        3003, # st.pölten land, gablitz
+        3001, # st.pölten land, mauerbach
+    ]
+    # fmt: on
+    is_valid_district = lambda x: int(x) < 2000 or int(x) in valid_districts
+    df = df[df["district"].apply(is_valid_district)]
 
     return df
 
@@ -157,5 +170,6 @@ def get_cleaned_data() -> pd.DataFrame:
     return df
 
 
-df = get_cleaned_data()
-print(df.head())
+if __name__ == "__main__":
+    df = get_cleaned_data()
+    print(df.head())
