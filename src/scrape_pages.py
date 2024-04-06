@@ -140,12 +140,14 @@ async def main():
     # tasks = [fetch_async(url) for url in links]
 
     # avoid being rate limited
+    DELAY_IN_MS = 250
+    NUM_DELAYED_REQUESTS = 4
     tasks = []
     for i, url in enumerate(links):
         tasks.append(fetch_async(url))
-        print(f"fetching page {i + 1}/{len(links)}")
-        if i % 5 == 0:
-            await asyncio.sleep(0.125)
+        print(f"fetching page {i + 1}/{len(links)}", end="\r")
+        if i % NUM_DELAYED_REQUESTS == 0:
+            await asyncio.sleep(DELAY_IN_MS / 1000)
 
     results = await asyncio.gather(*tasks)
 

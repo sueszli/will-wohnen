@@ -30,7 +30,7 @@ def get_url(i: int, df: pd.DataFrame) -> str:
 
 
 def clean_last_change(df: pd.DataFrame):
-    # last update as pd.Timestamp
+    # last update ✅
     lcs = []
     for i in range(len(df)):
         lc = df.iloc[i]["last_change"].strip().lower()
@@ -43,7 +43,7 @@ def clean_last_change(df: pd.DataFrame):
 
 
 def clean_price(df: pd.DataFrame):
-    # get price, has_broker_commission
+    # get price ✅
     prices = []
     for i in range(len(df)):
         price = df.iloc[i]["price_info"]["Kaufpreis"]
@@ -52,12 +52,15 @@ def clean_price(df: pd.DataFrame):
         prices.append(price)
     df["price"] = prices
 
+    # broker ✅
     has_broker_commission = []
     for i in range(len(df)):
         bc = df.iloc[i]["price_info"]
         bc_keys = [k.strip().lower() for k in bc.keys()]
         has_bc = any(["provision" in k for k in bc_keys])
         has_broker_commission.append(has_bc)
+        if has_broker_commission:
+            print(df.iloc[i]["url"])
     df["broker"] = has_broker_commission
 
     df.drop(columns=["price_info"], inplace=True)
@@ -169,7 +172,6 @@ def get_cleaned_data() -> pd.DataFrame:
 
     df["title"] = df["title"].apply(lambda x: x.strip().lower())
     df["descriptions"] = df["descriptions"].apply(lambda x: x["description_general"].strip().lower())
-    df.drop(columns=["energy_certificate"], inplace=True)
 
     clean_last_change(df)
     clean_price(df)
