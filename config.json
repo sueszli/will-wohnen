@@ -1,15 +1,10 @@
 {
     "price_range": {
-        "from": 1,
+        "from": 20000,
         "to": 150000
     },
-    "vienna_surroundings": true,
-    "bad_words": [
-        "unbefristet vermietet",
-        "sanierungsbedürftig"
-    ],
-    "good_words": [
-        "neubau"
-    ],
-    "request_delay_in_ms": 3000
+    "suburbs": true,
+
+    "bad_words": ["unbefristet vermietet", "sanierungsbedürftig"],
+    "good_words": ["neubau"]
 }
