@@ -5,6 +5,6 @@
     },
     "suburbs": true,
 
-    "bad_words": ["unbefristet vermietet", "sanierungsbedürftig"],
-    "good_words": ["neubau"]
+    "bad_words": ["vermietet", "unbefristet vermietet", "sanierungsbedürftig"],
+    "good_words": ["neubau", "südseitig"]
 }
