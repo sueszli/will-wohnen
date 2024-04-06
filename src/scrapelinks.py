@@ -9,7 +9,6 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-import multiprocessing
 import asyncio
 import aiohttp
 
@@ -72,66 +71,29 @@ def dump_links(links: set[str]) -> None:
         f.write("\n".join(links))
 
 
-url = get_init_url()
-set_user_agent()
-total_count = get_total_ads(url)
+async def main():
+    async def fetch_async(url: str) -> str:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                assert response.status == 200, f"status code: {response.status}"
+                return await response.text()
 
-links = set()
+    set_user_agent()
+    url = get_init_url()
+    total_count = get_total_ads(url)
 
-curr_page = 1
-while True:
-    response = requests.get(url + f"&page={curr_page}")
-    assert response.status_code == 200, f"status code: {response.status_code}"
+    print("running async fetches...")
+    tasks = [fetch_async(url + f"&page={i}") for i in range(1, total_count // 5 + 1)]
+    results = await asyncio.gather(*tasks)
 
-    new_links = parse_links(response.text)
-    links.update(new_links)
+    print("parsing all links...")
+    links = set()
+    for result in results:
+        new_links = parse_links(result)
+        links.update(new_links)
 
-    if len(new_links) == 0:
-        print("no more pages")
-        break
-
-    # print(f"\rpage {str(curr_page).zfill(2)}: {str(len(links)).zfill(3)} / {total_count} (+{len(new_links)})")
-    print("progress: " + "%.2f" % (len(links) / total_count * 100) + "%", end="\r")
-    curr_page += 1
-
-print("scraped", len(links), "/", total_count, "links")
-
-dump_links(links)
+    print(f"dumping {len(links)}/{total_count} links to file...")
+    dump_links(links)
 
 
-# # EXTREMELY fast verison with background asyncio
-# def background(func):
-#     def wrapper(*args, **kwargs):
-#         return asyncio.get_event_loop().run_in_executor(None, func, *args, **kwargs)
-
-#     return wrapper
-
-
-# @background
-# def fetch(url: str) -> str:
-#     response = requests.get(url)
-#     assert response.status_code == 200, f"status code: {response.status_code}"
-#     return response.text
-
-
-# async def fetch_async(url: str) -> str:
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get(url) as response:
-#             assert response.status == 200, f"status code: {response.status}"
-#             return await response.text()
-
-
-# async def main():
-#     tasks = [fetch_async(url + f"&page={i}") for i in range(1, total_count // 5 + 1)]
-#     results = await asyncio.gather(*tasks)
-
-#     for result in results:
-#         new_links = parse_links(result)
-#         links.update(new_links)
-#         print("progress: " + "%.2f" % (len(links) / total_count * 100) + "%", end="\r")
-
-#     print("scraped", len(links), "/", total_count, "links")
-#     dump_links(links)
-
-
-# asyncio.run(main())
+asyncio.run(main())
