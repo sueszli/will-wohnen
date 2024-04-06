@@ -4,6 +4,9 @@ import json
 import pandas as pd
 
 
+# -------------------------------------------------------------------------------------------------------- utils
+
+
 def read_latest_pages() -> dict:
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(parent_dir, "data")
@@ -16,6 +19,14 @@ def read_latest_pages() -> dict:
 
     dic = json.load(open(path))
     return dic
+
+
+def get_url(i: int, df: pd.DataFrame) -> str:
+    url = df.iloc[i]["url"]
+    return url
+
+
+# -------------------------------------------------------------------------------------------------------- cleaning
 
 
 def clean_last_change(df: pd.DataFrame):
