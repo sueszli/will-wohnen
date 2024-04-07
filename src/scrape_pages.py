@@ -131,12 +131,17 @@ total = len(load_links())
 async def fetch_async(url: str) -> str:
     global counter
 
+    await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
+
     async with aiohttp.ClientSession(raise_for_status=True) as session:
 
-        await asyncio.sleep(random.uniform(0, 0.125))  # throttle requests
+        await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
         async with session.get(url) as response:
-            assert response.status == 200, f"status code: {response.status}"
+            assert response.status == 200, f"status code: {response.status}"  # check status
+
+            await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
+
             counter += 1
             print(f"progress: {counter}/{total}", end="\r")
             return await response.text()
