@@ -13,7 +13,7 @@ counter=0
 total=$(wc -l < $last_links)
 while IFS= read -r line; do
     progress=$((counter*100/total))
-    printf "progress: $progress%%\n"
+    printf "progress: $progress%%\r"
 
     open -a "Google Chrome" $line
 
