@@ -169,13 +169,13 @@ def clean_attributes(df: pd.DataFrame):
             l = None
         leased.append(l)
 
-        print("url: ", df.iloc[i]["url"])
-        print("attrs: ", attrs)
-        print("\tneubau: ", neubau[i])
-        print("\tarea: ", areas[i])
-        print("\trooms: ", rooms[i])
-        print("\tneeds_fix: ", needs_fix[i])
-        print("\tleased: ", leased[i])
+        # print("url: ", df.iloc[i]["url"])
+        # print("attrs: ", attrs)
+        # print("\tneubau: ", neubau[i])
+        # print("\tarea: ", areas[i])
+        # print("\trooms: ", rooms[i])
+        # print("\tneeds_fix: ", needs_fix[i])
+        # print("\tleased: ", leased[i])
 
     df["neubau"] = neubau
     df["area"] = areas
