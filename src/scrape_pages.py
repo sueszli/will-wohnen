@@ -123,33 +123,18 @@ def dump_pages(pages: dict) -> None:
     json.dump(pages, f, indent=4, ensure_ascii=False)
 
 
-# @on_exception(backoff.expo, (aiohttp.ClientError, asyncio.TimeoutError), max_tries=5)
-# async def fetch_async(url: str, session: aiohttp.ClientSession) -> str:
-# async def fetch_async(url: str) -> str:
-#     headers = {
-#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-#         "Accept-Language": "en-US,en;q=0.5",
-#     }
-#     async with aiohttp.ClientSession(raise_for_status=True) as session:
-#         async with session.get(url, headers=headers) as response:
-#             assert response.status == 200, f"status code: {response.status}"
-#             return await response.text()
-
-#     # async with session:
-#     #     async with session.get(url, headers=headers) as response:
-#     #         if response.status != 200:
-#     #             raise aiohttp.ClientResponseError(response.request_info, response.history, status=response.status, headers=response.headers)
-#     #         return await response.text()
-
-
 counter = 0
 total = len(load_links())
 
 
-@backoff.on_exception(backoff.expo, (aiohttp.ClientError, AssertionError), max_tries=5)  # retry on these exceptions
+@on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
     global counter
+
     async with aiohttp.ClientSession(raise_for_status=True) as session:
+
+        await asyncio.sleep(random.uniform(0, 0.125))  # throttle requests
+
         async with session.get(url) as response:
             assert response.status == 200, f"status code: {response.status}"
             counter += 1
@@ -162,16 +147,10 @@ async def main():
 
     print("running async fetches...")
     tasks = [fetch_async(url) for url in links]
-    for task in tasks:
-        await asyncio.sleep(random.uniform(0, 0.125))  # throttle requests
-        await task
     results = await asyncio.gather(*tasks)
 
-    # tasks = [fetch_async(url) for url in links]
-    # results = await asyncio.gather(*tasks)
-
     print("parsing all pages...")
-    pages: List[dict] = [parse_page(url, html) for url, html in zip(links, results)]  # type: ignore
+    pages: List[dict] = [parse_page(url, html) for url, html in zip(links, results)]
     flat_pages: dict = dict(enumerate(pages))
 
     print("dumping all pages...")
