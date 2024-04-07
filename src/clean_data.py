@@ -28,14 +28,16 @@ def load_pages() -> pd.DataFrame:
 
 
 def clean_price(df: pd.DataFrame):
+    # ignore everything else: "no broker" flags are not reliable
     prices = []
 
-    # ignore everything else: there are always brokers even if the ad says "no broker"
     for i in range(len(df)):
         price = df.iloc[i]["price_info"]["Kaufpreis"]
         price = price.replace("€", "").replace(".", "").replace(",", ".").strip()
         price = float(price)
         prices.append(price)
+        # print("price: ", df.iloc[i]["price_info"]["Kaufpreis"])
+        # print("\tprice: ", prices[i])
 
     df["price"] = prices
     df.drop(columns=["price_info"], inplace=True)
@@ -51,6 +53,8 @@ def clean_district(df: pd.DataFrame):
         address = [a for a in address if a[0].isdigit() and len(a.split(" ")[0]) == 4]
         address = None if len(address) == 0 else address[0].split(" ")[0]
         districts.append(address)
+        # print("address: ", df.iloc[i]["address"])
+        # print("\tdistrict: ", districts[i])
 
     df["district"] = districts
     df.drop(columns=["address"], inplace=True)
@@ -95,6 +99,8 @@ def clean_last_update(df: pd.DataFrame):
         lc = " ".join(lc)
         lc = pd.to_datetime(lc, format="%d.%m.%Y %H:%M")
         lcs.append(lc)
+        # print("last_update: ", df.iloc[i]["last_update"])
+        # print("\tlast_update: ", lcs[i])
 
     df["last_update"] = lcs
 
@@ -103,6 +109,7 @@ def clean_attributes(df: pd.DataFrame):
     neubau = []
     areas = []
     rooms = []
+    leased = []
     needs_fix = []
 
     for i in range(len(df)):
@@ -142,7 +149,7 @@ def clean_attributes(df: pd.DataFrame):
                 r = None
         rooms.append(r)
 
-        # needs fix
+        # needs_fix
         z = attrs.get("zustand")
         if z == "sanierungsbedürftig":
             z = True
@@ -152,10 +159,29 @@ def clean_attributes(df: pd.DataFrame):
             z = None
         needs_fix.append(z)
 
+        # leased
+        l = attrs.get("verfügbar")
+        if l and "vermietet" in l:
+            l = True
+        elif l and l == "ab sofort":
+            l = False
+        else:
+            l = None
+        leased.append(l)
+
+        print("url: ", df.iloc[i]["url"])
+        print("attrs: ", attrs)
+        print("\tneubau: ", neubau[i])
+        print("\tarea: ", areas[i])
+        print("\trooms: ", rooms[i])
+        print("\tneeds_fix: ", needs_fix[i])
+        print("\tleased: ", leased[i])
+
     df["neubau"] = neubau
     df["area"] = areas
     df["rooms"] = rooms
     df["needs_fix"] = needs_fix
+    df["leased"] = leased
 
     df.drop(columns=["attributes"], inplace=True)
 
