@@ -5,7 +5,7 @@ import itertools
 import pandas as pd
 
 
-# -------------------------------------------------------------------------------------------------------- utils
+# -------------------------------------------------------------------------------------- utils
 
 
 def read_latest_pages() -> dict:
@@ -22,21 +22,32 @@ def read_latest_pages() -> dict:
     return dic
 
 
-# -------------------------------------------------------------------------------------------------------- cleaning
+# -------------------------------------------------------------------------------------- cleaning
 
 
-def clean_descriptions(df: pd.DataFrame):  # TESTED
-    descriptions = []
+def get_bag_of_words(df: pd.DataFrame):  # TESTED
+    bag_of_words = []
     for i in range(len(df)):
+
+        # title
+        title = df.iloc[i]["title"]
+
+        # all kinds of descriptions
         desc = df.iloc[i]["descriptions"]
         vals = [v for v in list(desc.values()) if v]
         merged = " ".join(vals)
+
+        # merge, strip, lower
+        merged += " " + title
         merged = merged.strip().lower()
-        descriptions.append(merged)
-    df["descriptions"] = descriptions
+        bag_of_words.append(merged)
+
+    df.drop(columns=["descriptions"], inplace=True)
+    df.drop(columns=["title"], inplace=True)
+    df["bag_of_words"] = bag_of_words
 
 
-def clean_last_change(df: pd.DataFrame):  # TESTED
+def get_last_update(df: pd.DataFrame):  # TESTED
     lcs = []
     for i in range(len(df)):
         lc = df.iloc[i]["last_change"].strip().lower()
@@ -56,15 +67,6 @@ def clean_price(df: pd.DataFrame):  # TESTED
         price = float(price)
         prices.append(price)
     df["price"] = prices
-
-    ## don't derive: they all have brokers
-    # has_broker = []
-    # for i in range(len(df)):
-    #     bk = df.iloc[i]["price_info"]
-    #     bk_keys = [k.strip().lower() for k in bk.keys()]
-    #     has_bk = any(["provision" in k for k in [k.strip().lower() for k in bk.keys()]])
-    #     has_broker.append(has_bk)
-    # df["broker"] = has_broker
 
     df.drop(columns=["price_info"], inplace=True)
 
@@ -145,7 +147,7 @@ def clean_attributes(df: pd.DataFrame):
     df.drop(columns=["attributes"], inplace=True)
 
 
-# -------------------------------------------------------------------------------------------------------- filtering rows
+# -------------------------------------------------------------------------------------- filtering rows
 
 
 def remove_outliers(df: pd.DataFrame):
@@ -177,14 +179,15 @@ def get_cleaned_data() -> pd.DataFrame:
     df = pd.DataFrame(dic).T
 
     df["title"] = df["title"].apply(lambda x: x.strip().lower())
-    clean_descriptions(df)
-    clean_last_change(df)
+    get_bag_of_words(df)
+    get_last_update(df)
     clean_price(df)
     clean_address(df)
     clean_attributes(df)
 
     df = remove_outliers(df)
 
+    df.drop(columns=["energy_certificate"], inplace=True)
     return df
 
 

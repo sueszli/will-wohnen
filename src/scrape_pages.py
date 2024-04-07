@@ -37,10 +37,10 @@ def parse_page(url: str, html: str) -> dict:
     elem = soup.find("h1", {"data-testid": "ad-detail-header"})
     data["title"] = elem.text if elem else None
 
-    # last change section
+    # last update section
 
     elem = soup.find("span", {"data-testid": "ad-detail-ad-edit-date-top"})
-    data["last_change"] = elem.text if elem else None
+    data["last_update"] = elem.text if elem else None
 
     # price info section
 
@@ -137,9 +137,7 @@ async def main():
 
     print("running async fetches...")
 
-    # tasks = [fetch_async(url) for url in links]
-
-    # avoid being rate limited
+    # avoid rate limit
     DELAY_IN_MS = 250
     NUM_DELAYED_REQUESTS = 4
     tasks = []
@@ -156,6 +154,7 @@ async def main():
     flat_pages: dict = dict(enumerate(pages))
 
     print("dumping all pages...")
+    print(json.dumps(flat_pages, indent=4, ensure_ascii=False))
     dump_pages(flat_pages)
 
 
