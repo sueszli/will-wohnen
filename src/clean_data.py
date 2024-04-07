@@ -107,49 +107,50 @@ def clean_attributes(df: pd.DataFrame):
 
     for i in range(len(df)):
         attrs = df.iloc[i]["attributes"]
+
+        # strip and lower everything
         lower_attrs = {}
         for k, v in attrs.items():
             lower_attrs[k.strip().lower()] = v.strip().lower()  # type: ignore
         attrs = lower_attrs
 
         # neubau
-        bt = attrs.get("bautyp")
-        if bt == "neubau":
+        b = attrs.get("bautyp")
+        if b == "neubau":
             neubau.append(True)
-        elif bt == "altbau":
+        elif b == "altbau":
             neubau.append(False)
         else:
             neubau.append(None)
 
         # area
-        area = attrs.get("wohnfläche")
-        if area:
-            area = area.split(" ")[0].replace(",", ".").strip()
+        w = attrs.get("wohnfläche")
+        if w:
+            w = w.split(" ")[0].replace(",", ".").strip()
             try:
-                area = float(area)
+                w = float(w)
             except:
-                area = None
-        areas.append(area)
+                w = None
+        areas.append(w)
 
-        # num rooms
-        nr = attrs.get("zimmer")
-        if nr:
+        # rooms
+        r = attrs.get("zimmer")
+        if r:
             try:
-                nr = int(nr)
+                r = int(r)
             except:
-                nr = None
-        rooms.append(nr)
+                r = None
+        rooms.append(r)
 
         # needs fix
-        needs_ren = attrs.get("zustand")
-        if needs_ren == "sanierungsbedürftig":
-            needs_ren = True
-        elif needs_ren != None:
-            needs_ren = False
+        z = attrs.get("zustand")
+        if z == "sanierungsbedürftig":
+            z = True
+        elif z != None:
+            z = False
         else:
-            needs_ren = None
-
-        needs_fix.append(needs_ren)
+            z = None
+        needs_fix.append(z)
 
     df["neubau"] = neubau
     df["area"] = areas
@@ -159,12 +160,15 @@ def clean_attributes(df: pd.DataFrame):
     df.drop(columns=["attributes"], inplace=True)
 
 
-# -------------------------------------------------------------------------------------- filtering rows
+# -------------------------------------------------------------------------------------- wrong scrapes
 
 
 def remove_outliers(df: pd.DataFrame):
     # too expensive
-    df = df[df["price"] < 150_000]
+    max_limit = 150_000
+    illegal_dfs = df[df["price"] >= max_limit]
+    print(f"removing {len(illegal_dfs)} rows with price >= {max_limit}...")
+    df = df[df["price"] < max_limit]
 
     # too far away
     # fmt: off
@@ -179,6 +183,8 @@ def remove_outliers(df: pd.DataFrame):
     ]
     # fmt: on
     is_valid_district = lambda x: int(x) < 2000 or int(x) in valid_districts
+    illegal_dfs = df[~df["district"].apply(is_valid_district)]
+    print(f"removing {len(illegal_dfs)} rows with invalid district...")
     df = df[df["district"].apply(is_valid_district)]
 
     return df
@@ -194,9 +200,8 @@ def get_cleaned_data() -> pd.DataFrame:
     clean_last_update(df)
     clean_attributes(df)
 
-    # df = remove_outliers(df)
-
-    # df.drop(columns=["energy_certificate"], inplace=True)
+    df = remove_outliers(df)
+    print(f"final length: {len(df)}")
     return df
 
 
