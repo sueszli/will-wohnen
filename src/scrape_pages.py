@@ -139,7 +139,7 @@ async def main():
     # tasks = [fetch_async(url) for url in links]
 
     # avoid rate limiting
-    RANDOM_DELAY_MS = 125
+    RANDOM_DELAY_MS = 250
     tasks = []
     for i, url in enumerate(links):
         delay = random.randint(0, RANDOM_DELAY_MS)
@@ -154,7 +154,7 @@ async def main():
     flat_pages: dict = dict(enumerate(pages))
 
     print("dumping all pages...")
-    print(json.dumps(flat_pages, indent=4, ensure_ascii=False))
+    # print(json.dumps(flat_pages, indent=4, ensure_ascii=False))
     dump_pages(flat_pages)
 
 
