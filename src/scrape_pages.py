@@ -130,6 +130,7 @@ async def fetch_async(url: str):
     }
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         async with session.get(url, headers=headers) as response:
+            assert response.status == 200, f"status code: {response.status}"
             return await response.text()
 
 
