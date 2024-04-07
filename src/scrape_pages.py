@@ -121,15 +121,28 @@ def dump_pages(pages: dict) -> None:
     json.dump(pages, f, indent=4, ensure_ascii=False)
 
 
-async def fetch_async(url: str) -> str:
+async def fetch_async(url: str):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
         "Accept-Language": "en-US,en;q=0.5",
     }
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            assert response.status == 200, f"status code: {response.status}"
-            return await response.text()
+
+    RETRIES = 5
+    RANDOM_DELAY_MS = random.randint(0, 500)
+
+    for i in range(RETRIES):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    assert response.status == 200, f"status code: {response.status}"
+                    return await response.text()
+        except Exception as e:
+            if i == RETRIES - 1:
+                raise e
+
+            print(f"retry {i+1}/{RETRIES}")
+            await asyncio.sleep(RANDOM_DELAY_MS / 1000)
+            return await fetch_async(url)
 
 
 async def main():
@@ -138,12 +151,10 @@ async def main():
     print("running async fetches...")
     # tasks = [fetch_async(url) for url in links]
 
-    # avoid rate limiting
-    RANDOM_DELAY_MS = 250
+    RANDOM_DELAY_MS = random.randint(0, 500)
     tasks = []
     for i, url in enumerate(links):
-        delay = random.randint(0, RANDOM_DELAY_MS)
-        await asyncio.sleep(delay / 1000)
+        await asyncio.sleep(RANDOM_DELAY_MS / 1000)
         tasks.append(fetch_async(url))
         print(f"fetching {i+1}/{len(links)}", end="\r")
 
@@ -154,7 +165,7 @@ async def main():
     flat_pages: dict = dict(enumerate(pages))
 
     print("dumping all pages...")
-    # print(json.dumps(flat_pages, indent=4, ensure_ascii=False))
+    print(json.dumps(flat_pages, indent=4, ensure_ascii=False))
     dump_pages(flat_pages)
 
 
