@@ -1,6 +1,6 @@
 import os
 import json
-import itertools
+
 
 import pandas as pd
 
@@ -8,7 +8,7 @@ import pandas as pd
 # -------------------------------------------------------------------------------------- utils
 
 
-def read_latest_pages() -> dict:
+def load_pages() -> pd.DataFrame:
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(parent_dir, "data")
     assert os.path.exists(data_dir), "data directory not found"
@@ -19,61 +19,31 @@ def read_latest_pages() -> dict:
     path = os.path.join("data", filenname)
 
     dic = json.load(open(path))
-    return dic
+    df = pd.DataFrame(dic).T
+
+    return df
 
 
 # -------------------------------------------------------------------------------------- cleaning
 
 
-def get_bag_of_words(df: pd.DataFrame):  # TESTED
-    bag_of_words = []
-    for i in range(len(df)):
-
-        # title
-        title = df.iloc[i]["title"]
-
-        # all kinds of descriptions
-        desc = df.iloc[i]["descriptions"]
-        vals = [v for v in list(desc.values()) if v]
-        merged = " ".join(vals)
-
-        # merge, strip, lower
-        merged += " " + title
-        merged = merged.strip().lower()
-        bag_of_words.append(merged)
-
-    df.drop(columns=["descriptions"], inplace=True)
-    df.drop(columns=["title"], inplace=True)
-    df["bag_of_words"] = bag_of_words
-
-
-def get_last_update(df: pd.DataFrame):  # TESTED
-    lcs = []
-    for i in range(len(df)):
-        lc = df.iloc[i]["last_change"].strip().lower()
-        lc = lc.split(" ")[2:4]
-        lc[0] = lc[0].replace(",", "")
-        lc = " ".join(lc)
-        lc = pd.to_datetime(lc, format="%d.%m.%Y %H:%M")
-        lcs.append(lc)
-    df["last_change"] = lcs
-
-
-def clean_price(df: pd.DataFrame):  # TESTED
+def clean_price(df: pd.DataFrame):
     prices = []
+
+    # ignore everything else: there are always brokers even if the ad says "no broker"
     for i in range(len(df)):
         price = df.iloc[i]["price_info"]["Kaufpreis"]
         price = price.replace("€", "").replace(".", "").replace(",", ".").strip()
         price = float(price)
         prices.append(price)
-    df["price"] = prices
 
+    df["price"] = prices
     df.drop(columns=["price_info"], inplace=True)
 
 
-def clean_address(df: pd.DataFrame):
-    # get district
+def clean_district(df: pd.DataFrame):
     districts = []
+
     for i in range(len(df)):
         address = df.iloc[i]["address"].strip()
         address = address.split(",")
@@ -86,12 +56,54 @@ def clean_address(df: pd.DataFrame):
     df.drop(columns=["address"], inplace=True)
 
 
+def clean_bag_of_words(df: pd.DataFrame):
+
+    bag_of_words = []
+
+    for i in range(len(df)):
+        merged = ""
+
+        # title
+        merged += df.iloc[i]["title"]
+
+        # descriptions
+        desc = df.iloc[i]["descriptions"]
+        vals = [v for v in list(desc.values()) if v]
+        merged += " ".join(vals) + " "
+
+        # energy_certificate
+        energy_cert = df.iloc[i]["energy_certificate"]
+        merged += (" " + energy_cert) if energy_cert else ""
+
+        merged = merged.strip().lower()
+        bag_of_words.append(merged.strip().lower())
+
+    df["bag_of_words"] = bag_of_words
+
+    df.drop(columns=["title"], inplace=True)
+    df.drop(columns=["descriptions"], inplace=True)
+    df.drop(columns=["energy_certificate"], inplace=True)
+
+
+def clean_last_update(df: pd.DataFrame):
+    lcs = []
+
+    for i in range(len(df)):
+        lc = df.iloc[i]["last_update"].strip().lower()
+        lc = lc.split(" ")[2:4]
+        lc[0] = lc[0].replace(",", "")
+        lc = " ".join(lc)
+        lc = pd.to_datetime(lc, format="%d.%m.%Y %H:%M")
+        lcs.append(lc)
+
+    df["last_update"] = lcs
+
+
 def clean_attributes(df: pd.DataFrame):
-    # get neubau, area, num_rooms, needs_renovation
     neubau = []
     areas = []
-    num_rooms = []
-    needs_renovation = []
+    rooms = []
+    needs_fix = []
 
     for i in range(len(df)):
         attrs = df.iloc[i]["attributes"]
@@ -101,16 +113,16 @@ def clean_attributes(df: pd.DataFrame):
         attrs = lower_attrs
 
         # neubau
-        constr_type = attrs.get("bautyp", None)
-        if constr_type == "neubau":
+        bt = attrs.get("bautyp")
+        if bt == "neubau":
             neubau.append(True)
-        elif constr_type == "altbau":
+        elif bt == "altbau":
             neubau.append(False)
         else:
             neubau.append(None)
 
         # area
-        area = attrs.get("wohnfläche", None)
+        area = attrs.get("wohnfläche")
         if area:
             area = area.split(" ")[0].replace(",", ".").strip()
             try:
@@ -120,16 +132,16 @@ def clean_attributes(df: pd.DataFrame):
         areas.append(area)
 
         # num rooms
-        nr = attrs.get("zimmer", None)
+        nr = attrs.get("zimmer")
         if nr:
             try:
                 nr = int(nr)
             except:
                 nr = None
-        num_rooms.append(nr)
+        rooms.append(nr)
 
-        # needs renovation
-        needs_ren = attrs.get("zustand", None)
+        # needs fix
+        needs_ren = attrs.get("zustand")
         if needs_ren == "sanierungsbedürftig":
             needs_ren = True
         elif needs_ren != None:
@@ -137,12 +149,12 @@ def clean_attributes(df: pd.DataFrame):
         else:
             needs_ren = None
 
-        needs_renovation.append(needs_ren)
+        needs_fix.append(needs_ren)
 
     df["neubau"] = neubau
     df["area"] = areas
-    df["rooms"] = num_rooms
-    df["needs_fix"] = needs_renovation
+    df["rooms"] = rooms
+    df["needs_fix"] = needs_fix
 
     df.drop(columns=["attributes"], inplace=True)
 
@@ -174,20 +186,17 @@ def remove_outliers(df: pd.DataFrame):
 
 def get_cleaned_data() -> pd.DataFrame:
     print("cleaning data...")
+    df = load_pages()
 
-    dic = read_latest_pages()
-    df = pd.DataFrame(dic).T
-
-    df["title"] = df["title"].apply(lambda x: x.strip().lower())
-    get_bag_of_words(df)
-    get_last_update(df)
     clean_price(df)
-    clean_address(df)
+    clean_district(df)
+    clean_bag_of_words(df)
+    clean_last_update(df)
     clean_attributes(df)
 
-    df = remove_outliers(df)
+    # df = remove_outliers(df)
 
-    df.drop(columns=["energy_certificate"], inplace=True)
+    # df.drop(columns=["energy_certificate"], inplace=True)
     return df
 
 

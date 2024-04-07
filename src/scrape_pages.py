@@ -1,7 +1,7 @@
 import os
 import json
 from typing import List
-
+import random
 import time
 
 import asyncio
@@ -136,16 +136,16 @@ async def main():
     links = load_links()
 
     print("running async fetches...")
+    # tasks = [fetch_async(url) for url in links]
 
-    # avoid rate limit
-    DELAY_IN_MS = 250
-    NUM_DELAYED_REQUESTS = 4
+    # avoid rate limiting
+    RANDOM_DELAY_MS = 125
     tasks = []
     for i, url in enumerate(links):
+        delay = random.randint(0, RANDOM_DELAY_MS)
+        await asyncio.sleep(delay / 1000)
         tasks.append(fetch_async(url))
-        print(f"fetching page {i + 1}/{len(links)}", end="\r")
-        if i % NUM_DELAYED_REQUESTS == 0:
-            await asyncio.sleep(DELAY_IN_MS / 1000)
+        print(f"fetching {i+1}/{len(links)}", end="\r")
 
     results = await asyncio.gather(*tasks)
 
