@@ -14,4 +14,4 @@ optimized for real estate investments
 
 see: https://github.com/sueszli/will-wohnen/blob/main/analysis.ipynb
 
-for a fun (+ super fast) performance hack for scraping also check out: https://github.com/sueszli/will-wohnen/blob/main/src/scrape_links.py
+for a fun (+ super fast) performance hack for scraping also check out: ./src/scrape_links.py
