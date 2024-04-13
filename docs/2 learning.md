@@ -1,19 +1,13 @@
-this project didn't turn out to be as practical as i thought it would be.
+this project doesn't give you an edge in real estate investing, because willhaben doesn't tell the full story:
 
-the main reasons are:
+- the best properties are only accessible to brokers - that's why they're so expensive.
+- people lie on ads and leave out important things like: additional mandatory repair costs, whether the apartment is leased for an indefinite period, etc.
 
--   of how much data is missing from the listings. people are only obligated to state the last_update, price and district - and even then, they are not always accurate (ie. people leaving out missing repair costs that make the apartment unaffordable).
+so just scraping a bunch of unstructured, incomplete text without any pictures won't suffice to find the top investments.
 
--   people purposefully leave out deal-breaker information in their listings (ie. the apartment already being rented out or the apartment being in a bad condition). just parsing a bunch of weirdly formatted and unstructured text doesn't help with that.
+# alternative approach
 
-my alternative approach is:
-
--   to go through the listings and first filter out purely based on the first visual impression.
--   then go through the listings and filter out based on the text by using a multi-highlight extension to highlight the text that i want to stand out (ie. keywords like "repair", "rented out", "bad condition", etc.).
-
-this is surprisingly effective and a lot simpler as well.
-
-# chrome plugin
+just use the website as is, but with the help of a multi-highlight extension.
 
 install: https://chromewebstore.google.com/detail/multi-find-search-and-hig/dffaiikpbncahnghlfnkhagffaemhgfo
 
