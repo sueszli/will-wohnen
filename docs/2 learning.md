@@ -1,9 +1,7 @@
 this project doesn't give you an edge in real estate investing, because willhaben doesn't tell the full story:
 
 - the best properties are only accessible to brokers - that's why they're so expensive.
-- people lie on ads and leave out important things like: additional mandatory repair costs, whether the apartment is leased for an indefinite period, etc.
-
-so just scraping a bunch of unstructured, incomplete text from a public website won't suffice to find the best matches analytically.
+- people lie, paraphrase and leave critical details out on ads: additional mandatory repair costs, whether the apartment is leased for an indefinite period, etc.
 
 # alternative approach
 
