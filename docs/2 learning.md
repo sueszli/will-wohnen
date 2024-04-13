@@ -5,7 +5,7 @@ this project doesn't give you an edge in real estate investing, because willhabe
 
 through this approach, you'll find the top 30% of investments at best and will have to sort the rest out manually.
 
-you'll get much further by just scrolling around and looking at the header pictures, since the majority of them reveal a lot more about the apartments' state than some blob of unstructured text that was scraped.
+you'll get much further by just scrolling around and looking at the header pictures, since the majority of them reveal a lot more about the apartments' state than some blob of unstructured text that was scraped by some python script.
 
 # alternative approach
 
