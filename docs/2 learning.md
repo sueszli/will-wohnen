@@ -25,8 +25,5 @@ vermietet
 renovierung
 sanierung
 unsaniert
-
-
-
 neubau
 ```
