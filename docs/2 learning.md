@@ -12,3 +12,21 @@ my alternative approach is:
 -   then go through the listings and filter out based on the text by using a multi-highlight extension to highlight the text that i want to stand out (ie. keywords like "repair", "rented out", "bad condition", etc.).
 
 this is surprisingly effective and a lot simpler as well.
+
+# chrome plugin
+
+install: https://chromewebstore.google.com/detail/multi-find-search-and-hig/dffaiikpbncahnghlfnkhagffaemhgfo
+
+```plaintext
+keywords:
+
+unbefristet
+vermietet
+renovierung
+sanierung
+unsaniert
+
+
+
+neubau
+```
