@@ -5,5 +5,3 @@ willhaben scraper,
 optimized for real estate investments
 
 see: https://github.com/sueszli/will-wohnen/blob/main/analysis.ipynb
-
-the link scraper turned out to be surprisingly performant: ./src/scrape_links.py
