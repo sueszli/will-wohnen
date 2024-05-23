@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import asyncio
 import aiohttp
 from tqdm.asyncio import tqdm
+from pathlib import Path
 
 
 CONFIG = {
@@ -52,19 +53,6 @@ def parse_links(html: str) -> List[str]:
     return hrefs
 
 
-def dump_links(links: set[str]) -> None:
-    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(parent_dir, "data")
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-
-    curr_time = time.strftime("%Y-%m-%d_%H-%M-%S")
-    path = os.path.join(data_dir, f"links_{curr_time}.csv")
-
-    with open(path, "w") as f:
-        f.write("\n".join(links))
-
-
 async def fetch_async(url: str) -> str:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -83,14 +71,16 @@ async def main():
     print(f"total ads: {total_count}")
 
     tasks = [fetch_async(url + f"&page={i}") for i in range(1, total_count // 5 + 2)]
-    results = await tqdm.gather(*tasks, desc="fetching pages")
+    results = await tqdm.gather(*tasks, desc="fetching")
 
     links = set()
-    for result in tqdm(results, desc="parsing links"):
+    for result in tqdm(results, desc="parsing"):
         new_links = parse_links(result)
         links.update(new_links)
 
-    dump_links(links)
+    filepath = Path.cwd() / "data" / ("links_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".csv")
+    with open(filepath, "w") as f:
+        f.write("\n".join(links))
 
 
 if __name__ == "__main__":
