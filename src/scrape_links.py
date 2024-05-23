@@ -37,7 +37,7 @@ def get_total_count(url: str) -> int:
     soup = BeautifulSoup(response.text, "html.parser")
     elem = soup.find("h1", {"data-testid": "result-list-title"})
     assert elem
-    return int(elem.text.split()[0])
+    return int(elem.text.split()[0].replace(".", ""))
 
 
 def parse_links(html: str) -> List[str]:
@@ -90,7 +90,6 @@ async def main():
         new_links = parse_links(result)
         links.update(new_links)
 
-    print(f"dumping {len(links)}/{total_count} links to file...")
     dump_links(links)
 
 
