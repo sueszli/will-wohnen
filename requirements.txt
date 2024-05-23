@@ -1,4 +1,0 @@
-aiohttp==3.8.6
-beautifulsoup4==4.12.3
-pandas==2.2.1
-Requests==2.31.0
