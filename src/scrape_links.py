@@ -82,13 +82,11 @@ async def main():
     print(f"url: {url}")
     print(f"total ads: {total_count}")
 
-    print("running async fetches...")
     tasks = [fetch_async(url + f"&page={i}") for i in range(1, total_count // 5 + 2)]
-    results = await tqdm.gather(*tasks)
+    results = await tqdm.gather(*tasks, desc="fetching pages")
 
-    print("parsing all links...")
     links = set()
-    for result in tqdm(results):
+    for result in tqdm(results, desc="parsing links"):
         new_links = parse_links(result)
         links.update(new_links)
 
