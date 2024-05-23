@@ -155,7 +155,7 @@ async def main():
     results = await asyncio.gather(*tasks)
 
     print("parsing all pages...")
-    pages: List[dict] = [parse_page(url, html) for url, html in zip(links, results)] # todo: use https://github.com/tqdm/tqdm instead of global var
+    pages: List[dict] = [parse_page(url, html) for url, html in zip(links, results)]
     flat_pages: dict = dict(enumerate(pages))
 
     print("dumping all pages...")
