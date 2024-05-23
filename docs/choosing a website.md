@@ -2,7 +2,7 @@ traffic estimated with: https://ahrefs.com/traffic-checker
 
 candidates: google query "wohnung kaufen wien"
 
-filter: apartment for sale in vienna for <150k EUR
+test query: apartment for sale in vienna for <150k EUR
 
 # best websites
 
