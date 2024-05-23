@@ -8,6 +8,8 @@ import asyncio
 import aiohttp
 import backoff
 from backoff import on_exception, expo
+from tqdm.asyncio import tqdm
+
 
 from bs4 import BeautifulSoup
 
@@ -123,13 +125,8 @@ def dump_pages(pages: dict) -> None:
     json.dump(pages, f, indent=4, ensure_ascii=False)
 
 
-counter = 0
-total = len(load_links())
-
-
 @on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
-    global counter
 
     await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
@@ -142,8 +139,6 @@ async def fetch_async(url: str) -> str:
 
             await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
-            counter += 1
-            print(f"progress: {counter}/{total}", end="\r")
             return await response.text()
 
 
@@ -152,7 +147,7 @@ async def main():
 
     print("running async fetches...")
     tasks = [fetch_async(url) for url in links]
-    results = await asyncio.gather(*tasks)
+    results = await tqdm.gather(*tasks)
 
     print("parsing all pages...")
     pages: List[dict] = [parse_page(url, html) for url, html in zip(links, results)]
