@@ -39,7 +39,7 @@ def get_urls() -> List[str]:
 
 urls = get_urls()
 with sync_playwright() as p:
-    browser = p.firefox.launch(headless=False)
+    browser = p.firefox.launch(headless=True)
     page = browser.new_page()
 
     # reduce bot detection
@@ -69,5 +69,6 @@ with sync_playwright() as p:
         urls.set_description(f"read {len(elements)}/90 links on page")
 
         # extract links
+        print(elements)
 
     browser.close()
