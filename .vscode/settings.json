@@ -1,6 +1,6 @@
 {
     // type checking
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "off",
 
     // formatters
     "[python]": {
