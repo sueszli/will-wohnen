@@ -5,6 +5,7 @@ import requests
 from urllib.parse import urljoin
 from pathlib import Path
 import random
+import csv
 
 from tqdm import tqdm
 from playwright.sync_api import sync_playwright
@@ -47,8 +48,7 @@ with sync_playwright() as p:
 
     is_fst_page = True
 
-    urls = tqdm(urls)
-    for url in urls:
+    for url in tqdm(urls):
         page.goto(url)
 
         # reduce cookies
@@ -65,10 +65,48 @@ with sync_playwright() as p:
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
 
         # load all ad elems
+        page_num = url.split("=")[-1]
         elements = page.query_selector_all("[data-testid^=search-result-entry-header]")
-        urls.set_description(f"read {len(elements)}/90 links on page")
+        if len(elements) < 90:
+            print(f"warning: found {len(elements)}/90 links on page {page_num}, url: {url}")
 
-        # extract links
-        print(elements)
+        # extract ad data
+        for elem in elements:
+            content = {}
+
+            content["link"] = "https://www.willhaben.at" + str(elem.get_attribute("href"))
+
+            title_elem = elem.query_selector("h3[class^=Text-sc-]")
+            content["title"] = title_elem.inner_text() if title_elem else None
+
+            address_elem = elem.query_selector("[data-dest-id^=search-result-entry-subheader]")
+            content["subheader"] = address_elem.inner_text() if address_elem else None
+
+            price_elem = elem.query_selector("[data-testid^=search-result-entry-price]")
+            content["price"] = price_elem.inner_text() if price_elem else None
+
+            teaser_elems = elem.query_selector_all("[data-testid^=search-result-entry-teaser-attributes]")
+            for teaser_elem in teaser_elems:
+                data_testid = teaser_elem.get_attribute("data-testid")
+                if not data_testid:
+                    continue
+                if data_testid.endswith("-0"):
+                    content["size"] = teaser_elem.inner_text()
+                elif data_testid.endswith("-1"):
+                    content["num_rooms"] = teaser_elem.inner_text()
+                elif data_testid.endswith("-2"):
+                    content["type"] = teaser_elem.inner_text()
+
+            # remove delimiter
+            for key in content:
+                if content[key]:
+                    content[key] = content[key].replace(";", "")
+
+            # write to file
+            with open(output_path, "a") as f:
+                writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=";")
+                if f.tell() == 0:
+                    writer.writeheader()
+                writer.writerow(content)
 
     browser.close()
