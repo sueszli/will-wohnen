@@ -72,7 +72,7 @@ def write_to_csv(content: dict):
     delim = ";"
     for key, value in content.items():
         if value:
-            content[key] = value.replace(delim, "")
+            content[key] = value.replace(delim, " ")
 
     with open(output_path, "a") as f:
         writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=delim)
