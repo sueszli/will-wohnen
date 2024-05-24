@@ -1,8 +1,16 @@
 traffic estimated with: https://ahrefs.com/traffic-checker
 
-candidates: google query "wohnung kaufen wien"
+candidates found through the google query: "wohnung kaufen wien"
 
-test query: apartment for sale in vienna for <150k EUR
+# query
+
+apartment for sale in vienna for <150k EUR
+
+some locations are not in vienna, but in the surrounding areas and worth considering:
+
+-   st.pölten land: mauerbach, gablitz, purkersdorf (see: https://de.wikipedia.org/wiki/Bezirk_St._P%C3%B6lten-Land)
+-   tulln: klosterneuburg (see: https://de.wikipedia.org/wiki/Bezirk_Tulln)
+-   korneuburg: langenzersdorf, biesamberg, hagenbrunn, gerasdorf bei wien (see: https://de.wikipedia.org/wiki/Bezirk_Korneuburg)
 
 # best websites
 

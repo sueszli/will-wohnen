@@ -78,7 +78,7 @@ async def main():
         new_links = parse_links(result)
         links.update(new_links)
 
-    filepath = Path.cwd() / "data" / ("links_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".csv")
+    filepath = Path.cwd() / "data" / ("links_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".txt")
     with open(filepath, "w") as f:
         f.write("\n".join(links))
 
