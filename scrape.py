@@ -2,15 +2,14 @@ import os
 from typing import List
 import time
 import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from pathlib import Path
-import itertools
-import functools
+import random
 
 from tqdm import tqdm
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
+from bs4 import BeautifulSoup
 
 
 output_path = Path.cwd() / "data" / ("links_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".csv")
@@ -40,10 +39,35 @@ def get_urls() -> List[str]:
 
 urls = get_urls()
 with sync_playwright() as p:
-
-    browser = p.firefox.launch()
+    browser = p.firefox.launch(headless=False)
     page = browser.new_page()
+
+    # reduce bot detection
     stealth_sync(page)
-    page.goto("https://www.google.com/")
-    page.screenshot(path=f"example-hi.png")
+
+    is_fst_page = True
+
+    urls = tqdm(urls)
+    for url in urls:
+        page.goto(url)
+
+        # reduce cookies
+        if is_fst_page:
+            page.wait_for_selector("[id=didomi-notice-disagree-button]")
+            page.click("[id=didomi-notice-disagree-button]")
+            is_fst_page = False
+
+        # slowly scroll to bottom of page for elems to load
+        for _ in range(100):
+            page.evaluate(f"window.scrollBy(0, 200)")
+            time.sleep(random.uniform(0.1, 0.2))
+        time.sleep(random.uniform(0.5, 1.5))
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+
+        # load all ad elems
+        elements = page.query_selector_all("[data-testid^=search-result-entry-header]")
+        urls.set_description(f"read {len(elements)}/90 links on page")
+
+        # extract links
+
     browser.close()
