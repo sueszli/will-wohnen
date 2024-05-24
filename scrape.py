@@ -65,17 +65,17 @@ def extract_content(elem) -> dict:
         elif data_testid.endswith("-2"):
             content["type"] = teaser_elem.inner_text()
 
-    # remove delimiter
-    for key in content:
-        if content[key]:
-            content[key] = content[key].replace(";", "")
-
     return content
 
 
 def write_to_csv(content: dict):
+    delim = ";"
+    for key, value in content.items():
+        if value:
+            content[key] = value.replace(delim, "")
+
     with open(output_path, "a") as f:
-        writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=";")
+        writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=delim)
         if f.tell() == 0:
             writer.writeheader()
         writer.writerow(content)
@@ -113,7 +113,7 @@ with sync_playwright() as p:
         if len(elements) < 90:
             print(f"warning: found {len(elements)}/90 links on page {page_num}, url: {url}")
 
-        # extract and store content
+        # store content
         for elem in elements:
             content: dict = extract_content(elem)
             write_to_csv(content)
