@@ -120,3 +120,4 @@ with sync_playwright() as p:
             write_to_csv(content)
 
     browser.close()
+
