@@ -68,10 +68,12 @@ def write_to_csv(content: dict, output_path: Path):
     delim = ";"
 
     for key, value in content.items():
-        if value:
+        if isinstance(value, str) and value:
             content[key] = value.replace(delim, " ")
+        elif value is None:
+            content[key] = ""
 
-    with open(output_path, "a") as f:
+    with open(output_path, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=delim)
         if f.tell() == 0:
             writer.writeheader()
