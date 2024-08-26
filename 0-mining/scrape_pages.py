@@ -48,12 +48,6 @@ def parse_page(url: str, html: str) -> dict:
                 if len(spans) == 2:
                     data[spans[0].text.strip()] = spans[1].text.strip()
 
-    # contact section
-    # span data-testid="top-contact-box-seller-name"
-    data["seller_name"] = safe_extract(soup.find("span", {"data-testid": "top-contact-box-seller-name"}))
-    print(data["seller_name"])
-    print("\n" * 5)
-
     # address section
     data["address"] = safe_extract(soup.find("div", {"data-testid": "object-location-address"}))
 
@@ -72,11 +66,20 @@ def parse_page(url: str, html: str) -> dict:
     for key, testid in description_sections:
         data[key] = safe_extract(soup.find("div", {"data-testid": testid}))
 
+    # contact section
+    data["company_name"] = safe_extract(soup.find("span", {"data-testid": "top-contact-box-seller-name"}))
+    data["company_broker_name"] = safe_extract(soup.find("div", {"data-testid": "contact-box-dealer-top-Kontakt"}))
+    elem = soup.find("div", {"data-testid": "contact-box-dealer-top-Infos"})
+    anchor = elem.find("a") if elem else None
+    data["company_url"] = anchor["href"] if anchor else None
+    data["company_reference_id"] = safe_extract(soup.find("div", {"data-testid": "contact-box-dealer-bottom-Referenz ID"}))
+    data["company_address"] = safe_extract(soup.find("div", {"data-testid": "contact-box-dealer-bottom-Adresse"}))
+
     return data
 
 
 async def write_jsonl(links_data: dict, outputpath: Path):
-    url = links_data["links_link"]
+    url = links_data["links_url"]
     html = await fetch_async(url)
     data = parse_page(url, html)
 
@@ -116,7 +119,7 @@ async def main():
     # drop cached urls
     read = [json.loads(line)["url"] for line in open(outputpath, "r")]
     prevlen = len(links_data)
-    links_data = [row for row in links_data if row["links_link"] not in read]
+    links_data = [row for row in links_data if row["links_url"] not in read]
     print(f"already scraped %.2f%%" % ((prevlen - len(links_data)) / prevlen * 100))
 
     # run concurrently (too fast, might get rate limited)
