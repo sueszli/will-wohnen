@@ -99,8 +99,9 @@ async def main():
         # preprocess
         links_data = dict(zip(header, row))
         data = {**data, **links_data}
-        data = {k: v.encode("ascii", "ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
-        data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ") if isinstance(v, str) else v for k, v in data.items()}
+        data = {k: v.encode("utf-8", errors="ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
+        data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\xa0", " ").replace("–", "-") if isinstance(v, str) else v for k, v in data.items()}
+        data = {k: " ".join(v.split()).strip() if v else None for k, v in data.items()}
 
         # dump to file
         with open(outputpath, "a") as f:

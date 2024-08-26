@@ -69,7 +69,6 @@ def extract_content(elem) -> dict:
         elif data_testid.endswith("-2"):
             content["type"] = teaser_elem.inner_text()
 
-    # clean up
     content = {k: " ".join(v.split()).strip() if v else None for k, v in content.items()}
     return content
 
