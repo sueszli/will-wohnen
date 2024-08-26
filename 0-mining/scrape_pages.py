@@ -14,14 +14,16 @@ from tqdm.asyncio import tqdm
 
 @on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
+    await asyncio.sleep(random.uniform(2, 5))  # throttle requests
+
     await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-        await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
+        await asyncio.sleep(random.uniform(0.125, 1))
 
         async with session.get(url) as response:
-            assert response.status == 200, f"status code: {response.status}"  # check status
-            await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
+            assert response.status == 200, f"status code: {response.status}"
+            await asyncio.sleep(random.uniform(0.125, 1))
 
             return await response.text()
 
@@ -79,7 +81,7 @@ def parse_page(url: str, html: str) -> dict:
     return data
 
 
-async def write_jsonl(links_data: dict, outputpath: Path):
+async def write_jsonl(links_data: dict, outputpath: Path):    
     url = links_data["links_url"]
     html = await fetch_async(url)
     data = parse_page(url, html)
@@ -122,7 +124,7 @@ async def main():
     print(f"progress: {((prevlen-len(links_data))/prevlen)*100:.2f}%")
 
     # parallel execution will get you rate limited
-    parallel = False
+    parallel = True
     if parallel:
         tasks = [write_jsonl(row, outputpath) for row in links_data]
         _ = await tqdm.gather(*tasks)
