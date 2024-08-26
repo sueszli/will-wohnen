@@ -49,6 +49,9 @@ def extract_content(elem) -> dict:
     price_elem = elem.query_selector("[data-testid^=search-result-entry-price]")
     content["price"] = price_elem.inner_text() if price_elem else None
 
+    content["m2"] = None
+    content["num_rooms"] = None
+    content["type"] = None
     teaser_elems = elem.query_selector_all("[data-testid^=search-result-entry-teaser-attributes]")
     for teaser_elem in teaser_elems:
         data_testid = teaser_elem.get_attribute("data-testid")
@@ -66,12 +69,7 @@ def extract_content(elem) -> dict:
 
 def write_to_csv(content: dict, output_path: Path):
     delim = ";"
-
-    for key, value in content.items():
-        if isinstance(value, str) and value:
-            content[key] = value.replace(delim, " ")
-        elif value is None:
-            content[key] = ""
+    content = {k: v.replace(delim, "") if isinstance(v, str) else v for k, v in content.items()}
 
     with open(output_path, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=delim)
