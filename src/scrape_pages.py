@@ -80,7 +80,7 @@ async def main():
     header = next(inputfile)
     header = ["links_" + word for word in header]
 
-    # create outputfile
+    # create outputfile (jsonl because the keys are dynamic)
     postfix = "_".join(Path(inputpath).name.split("_")[1:]).replace(".csv", ".jsonl")
     outputpath = Path.cwd() / "data" / ("pages_" + postfix)
     outputpath.touch(exist_ok=True)
@@ -98,7 +98,7 @@ async def main():
 
         # preprocess
         links_data = dict(zip(header, row))
-        data = {**links_data, **data}
+        data = {**data, **links_data}
         data = {k: v.encode("ascii", "ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
         data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ") if isinstance(v, str) else v for k, v in data.items()}
 
