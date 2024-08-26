@@ -1,8 +1,15 @@
+"""
+too fast, will get you rate limited
+"""
+
 import asyncio
+import csv
+import glob
 import json
 import os
 import random
 import time
+from pathlib import Path
 from typing import List
 
 import aiohttp
@@ -12,16 +19,16 @@ from tqdm.asyncio import tqdm
 
 
 def load_links() -> List[str]:
-    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(parent_dir, "data")
-    assert os.path.exists(data_dir), "data directory not found"
+    datapath = glob.glob(str(Path("./data/*.csv")))
+    datapath = list(filter(lambda p: Path(p).name.startswith("links_") and Path(p).name.endswith(".csv"), datapath))
+    assert len(datapath) > 0
+    datapath.sort()
+    datapath = datapath[-1]
 
-    data_files = [f for f in os.listdir(data_dir) if f.startswith("links_")]
-    assert data_files, "no data files found"
-
-    latest_file = max(data_files)
-    path = os.path.join(data_dir, latest_file)
-    links = open(path).read().splitlines()
+    csvfile = csv.reader(open(datapath, "r"))
+    header = next(csvfile)
+    body = list(csvfile)
+    links = list(map(lambda row: row[0], body))
     return links
 
 
@@ -131,7 +138,6 @@ async def fetch_async(url: str) -> str:
 
         async with session.get(url) as response:
             assert response.status == 200, f"status code: {response.status}"  # check status
-
             await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
             return await response.text()
@@ -139,6 +145,7 @@ async def fetch_async(url: str) -> str:
 
 async def main():
     links = load_links()
+    print(f"total links: {len(links)}")
 
     print("running async fetches...")
     tasks = [fetch_async(url) for url in links]
