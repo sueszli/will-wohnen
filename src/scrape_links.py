@@ -36,7 +36,15 @@ def get_urls() -> List[str]:
 def extract_content(elem) -> dict:
     # txt = elem.inner_text()
 
-    content = {}
+    content = {
+        "link": None,
+        "title": None,
+        "address": None,
+        "price": None,
+        "m2": None,
+        "num_rooms": None,
+        "type": None,
+    }
 
     content["link"] = "https://www.willhaben.at" + str(elem.get_attribute("href"))
 
@@ -49,9 +57,6 @@ def extract_content(elem) -> dict:
     price_elem = elem.query_selector("[data-testid^=search-result-entry-price]")
     content["price"] = price_elem.inner_text() if price_elem else None
 
-    content["m2"] = None
-    content["num_rooms"] = None
-    content["type"] = None
     teaser_elems = elem.query_selector_all("[data-testid^=search-result-entry-teaser-attributes]")
     for teaser_elem in teaser_elems:
         data_testid = teaser_elem.get_attribute("data-testid")
@@ -64,15 +69,14 @@ def extract_content(elem) -> dict:
         elif data_testid.endswith("-2"):
             content["type"] = teaser_elem.inner_text()
 
+    # clean up
+    content = {k: " ".join(v.split()).strip() if v else None for k, v in content.items()}
     return content
 
 
 def write_to_csv(content: dict, output_path: Path):
-    delim = ";"
-    content = {k: v.replace(delim, "") if isinstance(v, str) else v for k, v in content.items()}
-
-    with open(output_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=content.keys(), delimiter=delim)
+    with open(output_path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=content.keys(), strict=True, quoting=csv.QUOTE_NONNUMERIC)
         if f.tell() == 0:
             writer.writeheader()
         writer.writerow(content)
