@@ -35,7 +35,6 @@ def get_urls() -> List[str]:
 
 def extract_content(elem) -> dict:
     # txt = elem.inner_text()
-
     content = {
         "link": None,
         "title": None,
@@ -69,7 +68,6 @@ def extract_content(elem) -> dict:
         elif data_testid.endswith("-2"):
             content["type"] = teaser_elem.inner_text()
 
-    content = {k: " ".join(v.split()).strip() if v else None for k, v in content.items()}
     return content
 
 
@@ -119,6 +117,8 @@ def main():
             # store content
             for elem in elements:
                 content: dict = extract_content(elem)
+                content = {k: " ".join(v.split()).strip() if v else None for k, v in content.items()}
+                content = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\xa0", " ").replace("–", "-") if isinstance(v, str) else v for k, v in content.items()}
                 write_to_csv(content, output_path)
 
         browser.close()

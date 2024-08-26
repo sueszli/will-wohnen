@@ -8,6 +8,7 @@ from pathlib import Path
 import aiohttp
 from backoff import expo, on_exception
 from bs4 import BeautifulSoup
+from filelock import FileLock
 from tqdm.asyncio import tqdm
 
 
@@ -65,7 +66,27 @@ def parse_page(url: str, html: str) -> dict:
     description_sections = [("description_general", "ad-description-Objektbeschreibung"), ("description_location", "ad-description-Lage"), ("description_equipment", "ad-description-Ausstattung"), ("description_additional", "ad-description-Zusatzinformationen"), ("description_price", "ad-description-Preis und Detailinformation")]
     for key, testid in description_sections:
         data[key] = safe_extract(soup.find("div", {"data-testid": testid}))
+
     return data
+
+
+def write_jsonl(links_data: dict, outputpath: Path):
+    url = links_data["links_link"]
+    html = fetch_async(url)
+    data = parse_page(url, html)
+
+    # preprocess
+    data = {**data, **links_data}
+    data = {k: v.encode("utf-8", errors="ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
+    data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\xa0", " ").replace("–", "-") if isinstance(v, str) else v for k, v in data.items()}
+    data = {k: " ".join(v.split()).strip() if v else None for k, v in data.items()}
+
+    # write to file (with lock)
+    lock = FileLock(outputpath.with_suffix(".lock"), timeout=1)
+    with lock:
+        with open(outputpath, "a") as f:
+            json.dump(data, f, ensure_ascii=False)
+            f.write("\n")
 
 
 async def main():
@@ -75,42 +96,26 @@ async def main():
     assert len(inputpath) > 0
     inputpath.sort()
     inputpath = inputpath[-1]
-    filelen = sum(1 for line in open(inputpath, "r")) - 1
-    inputfile = csv.reader(open(inputpath, "r"))
-    header = next(inputfile)
-    header = ["links_" + word for word in header]
+    inputfile = list(csv.reader(open(inputpath, "r")))
+    header = ["links_" + word for word in inputfile[0]]
+    body = inputfile[1:]
+    links_data = [dict(zip(header, row)) for row in body]
 
     # create outputfile (jsonl because the keys are dynamic)
     postfix = "_".join(Path(inputpath).name.split("_")[1:]).replace(".csv", ".jsonl")
     outputpath = Path.cwd() / "data" / ("pages_" + postfix)
     outputpath.touch(exist_ok=True)
 
-    # too fast, will get blocked
-    # tasks = [fetch_async(url) for url in links]
-    # results = await tqdm.gather(*tasks)
+    # drop cached urls
+    read = [json.loads(line)["url"] for line in open(outputpath, "r")]
+    prevlen = len(links_data)
+    links_data = [row for row in links_data if row["links_link"] not in read]
+    print(f"already scraped %.2f%%" % ((prevlen - len(links_data)) / prevlen * 100))
 
-    for row in tqdm(inputfile, total=filelen):
-        url = row[0]
-
-        is_cached = any(url in json.loads(line)["url"] for line in open(outputpath, "r"))
-        if is_cached:
-            print(f"skipping {url}")
-            continue
-
-        html = await fetch_async(url)
-        data = parse_page(url, html)
-
-        # preprocess
-        links_data = dict(zip(header, row))
-        data = {**data, **links_data}
-        data = {k: v.encode("utf-8", errors="ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
-        data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\xa0", " ").replace("–", "-") if isinstance(v, str) else v for k, v in data.items()}
-        data = {k: " ".join(v.split()).strip() if v else None for k, v in data.items()}
-
-        # dump to file
-        with open(outputpath, "a") as f:
-            json.dump(data, f, ensure_ascii=False)
-            f.write("\n")
+    # run concurrently (too fast, might get rate limited)
+    tasks = [write_jsonl(row, outputpath) for row in links_data]
+    _ = await tqdm.gather(*tasks)
+    print("done")
 
 
 if __name__ == "__main__":
