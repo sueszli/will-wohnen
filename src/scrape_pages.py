@@ -1,9 +1,7 @@
 import asyncio
 import csv
 import glob
-import json
 import random
-import time
 from pathlib import Path
 
 import aiohttp
@@ -71,22 +69,44 @@ def parse_page(url: str, html: str) -> dict:
 
 
 async def main():
-    outputpath = Path.cwd() / "data" / ("pages_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".csv")
-
+    # read inputfile
     inputpath = glob.glob(str(Path("./data/*.csv")))
     inputpath = list(filter(lambda p: Path(p).name.startswith("links_") and Path(p).name.endswith(".csv"), inputpath))
     assert len(inputpath) > 0
     inputpath.sort()
     inputpath = inputpath[-1]
-
     inputfile = csv.reader(open(inputpath, "r"))
     header = next(inputfile)
+    header = ["links_" + word for word in header]
+
+    # create outputfile
+    postfix = "_".join(Path(inputpath).name.split("_")[1:])
+    outputpath = Path.cwd() / "data" / ("pages_" + postfix)
+    outputpath.touch(exist_ok=True)
 
     for row in tqdm(inputfile):
         url = row[0]
+
+        is_cached = any(url in line for line in open(outputpath, "r"))
+        if is_cached:
+            print(f"skipping {url}")
+            continue
+
         html = await fetch_async(url)
         data = parse_page(url, html)
-        print(json.dumps(data, indent=4, ensure_ascii=False))
+
+        # preprocess
+        links_data = dict(zip(header, row))
+        data = {**links_data, **data}
+        data = {k: v.encode("ascii", "ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
+        data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ") if isinstance(v, str) else v for k, v in data.items()}
+
+        # dump
+        with open(outputpath, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=data.keys(), strict=True, quoting=csv.QUOTE_NONNUMERIC)
+            if f.tell() == 0:
+                writer.writeheader()
+            writer.writerow(data)
 
 
 if __name__ == "__main__":
