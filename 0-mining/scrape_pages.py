@@ -8,6 +8,7 @@ from pathlib import Path
 import aiohttp
 from backoff import expo, on_exception
 from bs4 import BeautifulSoup
+from filelock import FileLock
 from tqdm.asyncio import tqdm
 
 
@@ -89,14 +90,12 @@ async def write_jsonl(links_data: dict, outputpath: Path):
     data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("\xa0", " ").replace("–", "-") if isinstance(v, str) else v for k, v in data.items()}
     data = {k: " ".join(v.split()).strip() if v else None for k, v in data.items()}
 
-    print(json.dumps(data, ensure_ascii=False, indent=4))
-
     # write to file (with lock)
-    # lock = FileLock(outputpath.with_suffix(".lock"), timeout=1)
-    # with lock:
-    #     with open(outputpath, "a") as f:
-    #         json.dump(data, f, ensure_ascii=False)
-    #         f.write("\n")
+    lock = FileLock(outputpath.with_suffix(".lock"), timeout=1)
+    with lock:
+        with open(outputpath, "a") as f:
+            json.dump(data, f, ensure_ascii=False)
+            f.write("\n")
 
 
 async def main():
@@ -122,15 +121,15 @@ async def main():
     links_data = [row for row in links_data if row["links_url"] not in read]
     print(f"already scraped %.2f%%" % ((prevlen - len(links_data)) / prevlen * 100))
 
-    # run concurrently (too fast, might get rate limited)
-    # tasks = [write_jsonl(row, outputpath) for row in links_data]
-    # _ = await tqdm.gather(*tasks)
-
-    # run sequentially (slower, but safer)
-    for row in tqdm(links_data):
-        await write_jsonl(row, outputpath)
-        break
-    print("done")
+    parallel = True
+    if parallel:
+        # run concurrently (too fast, might get rate limited)
+        tasks = [write_jsonl(row, outputpath) for row in links_data]
+        _ = await tqdm.gather(*tasks)
+    else:
+        # run sequentially (slower, but safer)
+        for row in tqdm(links_data):
+            await write_jsonl(row, outputpath)
 
 
 if __name__ == "__main__":
