@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import glob
+import json
 import random
 from pathlib import Path
 
@@ -64,7 +65,6 @@ def parse_page(url: str, html: str) -> dict:
     description_sections = [("description_general", "ad-description-Objektbeschreibung"), ("description_location", "ad-description-Lage"), ("description_equipment", "ad-description-Ausstattung"), ("description_additional", "ad-description-Zusatzinformationen"), ("description_price", "ad-description-Preis und Detailinformation")]
     for key, testid in description_sections:
         data[key] = safe_extract(soup.find("div", {"data-testid": testid}))
-
     return data
 
 
@@ -75,19 +75,20 @@ async def main():
     assert len(inputpath) > 0
     inputpath.sort()
     inputpath = inputpath[-1]
+    filelen = sum(1 for line in open(inputpath, "r")) - 1
     inputfile = csv.reader(open(inputpath, "r"))
     header = next(inputfile)
     header = ["links_" + word for word in header]
 
     # create outputfile
-    postfix = "_".join(Path(inputpath).name.split("_")[1:])
+    postfix = "_".join(Path(inputpath).name.split("_")[1:]).replace(".csv", ".jsonl")
     outputpath = Path.cwd() / "data" / ("pages_" + postfix)
     outputpath.touch(exist_ok=True)
 
-    for row in tqdm(inputfile):
+    for row in tqdm(inputfile, total=filelen):
         url = row[0]
 
-        is_cached = any(url in line for line in open(outputpath, "r"))
+        is_cached = any(url in json.loads(line)["url"] for line in open(outputpath, "r"))
         if is_cached:
             print(f"skipping {url}")
             continue
@@ -101,12 +102,10 @@ async def main():
         data = {k: v.encode("ascii", "ignore").decode("utf-8") if isinstance(v, str) else v for k, v in data.items()}
         data = {k: v.replace("\n", " ").replace("\r", " ").replace("\t", " ") if isinstance(v, str) else v for k, v in data.items()}
 
-        # dump
-        with open(outputpath, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=data.keys(), strict=True, quoting=csv.QUOTE_NONNUMERIC)
-            if f.tell() == 0:
-                writer.writeheader()
-            writer.writerow(data)
+        # dump to file
+        with open(outputpath, "a") as f:
+            json.dump(data, f, ensure_ascii=False)
+            f.write("\n")
 
 
 if __name__ == "__main__":
