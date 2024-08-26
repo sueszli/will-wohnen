@@ -1,17 +1,14 @@
-import os
+import asyncio
 import json
-from typing import List
+import os
 import random
 import time
+from typing import List
 
-import asyncio
 import aiohttp
-import backoff
-from backoff import on_exception, expo
-from tqdm.asyncio import tqdm
-
-
+from backoff import expo, on_exception
 from bs4 import BeautifulSoup
+from tqdm.asyncio import tqdm
 
 
 def load_links() -> List[str]:
@@ -127,11 +124,9 @@ def dump_pages(pages: dict) -> None:
 
 @on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
-
     await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-
         await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
         async with session.get(url) as response:

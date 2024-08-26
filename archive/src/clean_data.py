@@ -1,9 +1,7 @@
-import os
 import json
-
+import os
 
 import pandas as pd
-
 
 # -------------------------------------------------------------------------------------- utils
 
@@ -61,7 +59,6 @@ def clean_district(df: pd.DataFrame):
 
 
 def clean_bag_of_words(df: pd.DataFrame):
-
     bag_of_words = []
 
     for i in range(len(df)):

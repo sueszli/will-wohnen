@@ -1,16 +1,14 @@
-import os
-from typing import List
-import time
-import requests
-from pathlib import Path
-import random
 import csv
+import random
+import time
+from pathlib import Path
+from typing import List
 
-from tqdm import tqdm
+import requests
+from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
-from bs4 import BeautifulSoup
-
+from tqdm import tqdm
 
 output_path = Path.cwd() / "data" / ("links_" + time.strftime("%Y-%m-%d_%H-%M-%S") + ".csv")
 
@@ -82,42 +80,46 @@ def write_to_csv(content: dict):
         writer.writerow(content)
 
 
-urls = get_urls()
-with sync_playwright() as p:
-    browser = p.firefox.launch(headless=True)
-    page = browser.new_page()
+def main():
+    urls = get_urls()
+    with sync_playwright() as p:
+        browser = p.firefox.launch(headless=True)
+        page = browser.new_page()
 
-    # reduce bot detection
-    stealth_sync(page)
+        # reduce bot detection
+        stealth_sync(page)
 
-    is_fst_page = True
+        is_fst_page = True
 
-    for url in tqdm(urls):
-        page.goto(url)
+        for url in tqdm(urls):
+            page.goto(url)
 
-        # reduce cookies
-        if is_fst_page:
-            page.wait_for_selector("[id=didomi-notice-disagree-button]")
-            page.click("[id=didomi-notice-disagree-button]")
-            is_fst_page = False
+            # reduce cookies
+            if is_fst_page:
+                page.wait_for_selector("[id=didomi-notice-disagree-button]")
+                page.click("[id=didomi-notice-disagree-button]")
+                is_fst_page = False
 
-        # slowly scroll to bottom of page for elems to load
-        for _ in range(100):
-            page.evaluate(f"window.scrollBy(0, 200)")
-            time.sleep(random.uniform(0.1, 0.2))
-        time.sleep(random.uniform(0.5, 1.5))
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            # slowly scroll to bottom of page for elems to load
+            for _ in range(100):
+                page.evaluate(f"window.scrollBy(0, 200)")
+                time.sleep(random.uniform(0.1, 0.2))
+            time.sleep(random.uniform(0.5, 1.5))
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
 
-        # load all ad elems
-        page_num = url.split("=")[-1]
-        elements = page.query_selector_all("[data-testid^=search-result-entry-header]")
-        if len(elements) < 90:
-            print(f"warning: found {len(elements)}/90 links on page {page_num}, url: {url}")
+            # load all ad elems
+            page_num = url.split("=")[-1]
+            elements = page.query_selector_all("[data-testid^=search-result-entry-header]")
+            if len(elements) < 90:
+                print(f"warning: found {len(elements)}/90 links on page {page_num}, url: {url}")
 
-        # store content
-        for elem in elements:
-            content: dict = extract_content(elem)
-            write_to_csv(content)
+            # store content
+            for elem in elements:
+                content: dict = extract_content(elem)
+                write_to_csv(content)
 
-    browser.close()
+        browser.close()
 
+
+if __name__ == "__main__":
+    main()

@@ -1,16 +1,13 @@
-import os
-from typing import List
-
+import asyncio
 import time
-import requests
-from bs4 import BeautifulSoup
+from pathlib import Path
+from typing import List
 from urllib.parse import urljoin
 
-import asyncio
 import aiohttp
+import requests
+from bs4 import BeautifulSoup
 from tqdm.asyncio import tqdm
-from pathlib import Path
-
 
 CONFIG = {
     "price_range": {
