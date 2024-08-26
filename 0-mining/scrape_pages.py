@@ -119,15 +119,14 @@ async def main():
     read = [json.loads(line)["url"] for line in open(outputpath, "r")]
     prevlen = len(links_data)
     links_data = [row for row in links_data if row["links_url"] not in read]
-    print(f"already scraped %.2f%%" % ((prevlen - len(links_data)) / prevlen * 100))
+    print(f"progress: {((prevlen-len(links_data))/prevlen)*100:.2f}%")
 
-    parallel = True
+    # parallel execution will get you rate limited
+    parallel = False
     if parallel:
-        # run concurrently (too fast, might get rate limited)
         tasks = [write_jsonl(row, outputpath) for row in links_data]
         _ = await tqdm.gather(*tasks)
     else:
-        # run sequentially (slower, but safer)
         for row in tqdm(links_data):
             await write_jsonl(row, outputpath)
 
