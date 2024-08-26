@@ -85,6 +85,10 @@ async def main():
     outputpath = Path.cwd() / "data" / ("pages_" + postfix)
     outputpath.touch(exist_ok=True)
 
+    # too fast, will get blocked
+    # tasks = [fetch_async(url) for url in links]
+    # results = await tqdm.gather(*tasks)
+
     for row in tqdm(inputfile, total=filelen):
         url = row[0]
 
