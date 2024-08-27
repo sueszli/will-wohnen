@@ -14,7 +14,7 @@ from tqdm.asyncio import tqdm
 
 @on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
-    await asyncio.sleep(random.uniform(2, 5))  # throttle requests
+    await asyncio.sleep(random.uniform(1, 50))
 
     await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 

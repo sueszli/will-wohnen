@@ -18,8 +18,8 @@ echo $! > "alive-monitor.pid"
 echo "$(date): started" >> "alive-monitor.log"
 
 # watch
-watch -n 0.1 "tail -n 100 alive.log"
 while true; do clear; tail -n 100 alive.log; sleep 0.1; done
+watch -n 0.1 "tail -n 100 alive.log"
 pgrep -f "$python_file"
 nvtop
 htop
