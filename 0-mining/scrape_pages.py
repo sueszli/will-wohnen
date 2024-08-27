@@ -14,7 +14,7 @@ from tqdm.asyncio import tqdm
 
 @on_exception(expo, (aiohttp.ClientError, AssertionError), max_tries=3)  # retry on exceptions
 async def fetch_async(url: str) -> str:
-    await asyncio.sleep(random.uniform(1, 50))
+    # await asyncio.sleep(random.uniform(10, 60))
 
     await asyncio.sleep(random.uniform(0.125, 1))  # throttle requests
 
@@ -124,7 +124,7 @@ async def main():
     print(f"progress: {((prevlen-len(links_data))/prevlen)*100:.2f}%")
 
     # parallel execution will get you rate limited
-    parallel = True
+    parallel = False
     if parallel:
         tasks = [write_jsonl(row, outputpath) for row in links_data]
         _ = await tqdm.gather(*tasks)

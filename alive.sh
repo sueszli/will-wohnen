@@ -1,6 +1,21 @@
-python_file="$PWD/0-mining/scrape_pages.py"
+# turn this into a makefile thing
 
-# run script, stay alive
+# Usage:
+# 
+# $ ./alive.sh <python_file>
+# 
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <python_file>"
+    exit 1
+fi
+if [ ! -f "$1" ]; then
+    echo "Error: $1 is not a file"
+    exit 1
+fi
+
+python_file=$1
+
 monitor() {
     while true; do
         if ! pgrep -f "$python_file" > /dev/null; then
