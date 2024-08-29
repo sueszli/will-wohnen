@@ -1,7 +1,7 @@
 - deadline 30. september
 - learning objectives: https://kg.dbai.tuwien.ac.at/kg-course/details/
 - assessment: https://kg.dbai.tuwien.ac.at/kg-course/organization/#:~:text=Going%20to%20be-,Assessed,-%3F
-- 6 page report, 40h
+- 6 page report, 40h time budget
 
 ---
 
