@@ -2,10 +2,12 @@
                             ~~
                           _||____
  /\ /\ /\                /\\\\\\\\             willhaben
-//\\/\\/\\        __    /__\\\\\\\\  _,        real-estate
-//\\/\\/\\     __/  \_  |__|_|_|__|   \__,     scraper
+//\\/\\/\\        __    /__\\\\\\\\  _,        viennese real-estate
+//\\/\\/\\     __/  \_  |__|_|_|__|   \__,     analytics
  || || ||     '-o---o-' |  |/|\| /|   /\ \
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-MAKE SURE TO USE GIT-UPLOAD TO UPLOAD THE LARGE ASS DATASET
+```
+tar -xzf data.tar.gz -C .
+make init
+```
