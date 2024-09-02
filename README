@@ -12,5 +12,4 @@ real estate from vienna
 
 ```
 tar -xzf data.tar.gz -C .
-make init
 ```
