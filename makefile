@@ -6,7 +6,7 @@ init:
 	pip install pip --upgrade
 	pip install pipreqs
 	rm -rf requirements.txt requirements.in
-	pipreqs . --mode no-pin --encoding utf-8
+	pipreqs . --mode no-pin --encoding utf-8 --ignore .venv
 	mv requirements.txt requirements.in
 
 	# get requirements.txt
@@ -90,7 +90,7 @@ conda-clean:
 		source $$(conda info --base)/etc/profile.d/conda.sh; conda deactivate; \
 	'
 
-# --------------------------------------------------------------- nohup
+# --------------------------------------------------------------- utils
 
 .PHONY: monitor # create nohup with restart on failure
 monitor:
