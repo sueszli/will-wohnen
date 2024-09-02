@@ -23,6 +23,36 @@ lock:
 	@bash -c "source .venv/bin/activate && pip freeze > requirements.in"
 	pip-compile requirements.in -o requirements.txt
 
+# --------------------------------------------------------------- docker
+
+.PHONY: docker-install # run docker container
+docker-install:
+	@echo "to exec into docker container, run: 'docker exec -it main /bin/bash'"
+	docker-compose up --detach
+
+.PHONY: docker-build # save changes to container
+docker-build:
+	docker-compose build
+
+.PHONY: docker-clean # wipe everything in docker
+docker-clean:
+	docker-compose down
+
+	-docker stop $$(docker ps -a -q)
+	-docker rm $$(docker ps -a -q)
+	-docker rmi $$(docker images -q)
+	yes | docker container prune
+	yes | docker image prune
+	yes | docker volume prune
+	yes | docker network prune
+	yes | docker system prune
+	
+	docker ps --all
+	docker images
+	docker system df
+	docker volume ls
+	docker network ls
+
 # --------------------------------------------------------------- conda
 
 .PHONY: conda-get-yaml # convert requirements.txt to env.yaml file (idempotent)
@@ -60,36 +90,6 @@ conda-clean:
 		source $$(conda info --base)/etc/profile.d/conda.sh; conda deactivate; \
 	'
 
-# --------------------------------------------------------------- docker
-
-.PHONY: docker-install # run docker container
-docker-install:
-	@echo "to exec into docker container, run: 'docker exec -it main /bin/bash'"
-	docker-compose up --detach
-
-.PHONY: docker-build # save changes to container
-docker-build:
-	docker-compose build
-
-.PHONY: docker-clean # wipe everything in docker
-docker-clean:
-	docker-compose down
-
-	-docker stop $$(docker ps -a -q)
-	-docker rm $$(docker ps -a -q)
-	-docker rmi $$(docker images -q)
-	yes | docker container prune
-	yes | docker image prune
-	yes | docker volume prune
-	yes | docker network prune
-	yes | docker system prune
-	
-	docker ps --all
-	docker images
-	docker system df
-	docker volume ls
-	docker network ls
-
 # --------------------------------------------------------------- nohup
 
 .PHONY: monitor # create nohup with restart on failure
@@ -125,8 +125,6 @@ monitor-kill:
 	-kill -9 $$(cat monitor-process.pid)
 	rm -rf monitor-process.pid
 	rm -rf monitor-process.log
-
-# --------------------------------------------------------------- utils
 
 .PHONY: fmt # format codebase
 fmt:
