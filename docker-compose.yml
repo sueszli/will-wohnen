@@ -21,4 +21,4 @@ services:
       - "7474:7474"
       - "7687:7687"
 
-    command: ["tail", "-f", "/dev/null"]
+    command: ["neo4j", "start"]

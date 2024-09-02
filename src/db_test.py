@@ -1,20 +1,22 @@
 from neo4j import GraphDatabase
 
-url = "bolt://172.18.0.2:7687"
-user = "neo4j"
-password = "password"
-
-driver = GraphDatabase.driver(url, auth=(user, password))
 
 def create_person(tx, name):
     tx.run("CREATE (a:Person {name: $name})", name=name)
 
-def print_person(tx, name):
-    for record in tx.run("MATCH (a:Person) WHERE a.name = $name RETURN a.name", name=name):
-        print(record["a.name"])
+
+def print_people(tx):
+    result = tx.run("MATCH (a:Person) RETURN a.name AS name")
+    for record in result:
+        print(record["name"])
+
+
+url = "bolt://main:7687"
+user = "neo4j"
+password = "password"
+driver = GraphDatabase.driver(url, auth=(user, password))
 
 with driver.session() as session:
-    session.execute_write(create_person, "Alice")
-    session.execute_read(print_person, "Alice")
-
-driver.close()
+    session.write_transaction(create_person, "Alice")
+    session.write_transaction(create_person, "Bob")
+    session.read_transaction(print_people)

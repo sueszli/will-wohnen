@@ -1,8 +1,6 @@
-from tqdm import tqdm
 import json
-import pandas as pd
-from pathlib import Path
 from glob import glob
+from pathlib import Path
 
 
 def get_keys(file: str) -> list:
@@ -35,4 +33,3 @@ print(json.dumps(fstelem, indent=4, ensure_ascii=False))
 # for line in tqdm(file):
 #     k = json.loads(line)
 #     df = df._append(k, ignore_index=True)
-
