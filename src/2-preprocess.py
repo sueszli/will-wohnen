@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 from glob import glob
@@ -58,7 +59,6 @@ def parse_commission_fee(string: str, kaufpreis: Optional[float] = None) -> Opti
     elif "€" in string:
         string = string.split("€")[1].strip()
         return parse_float(string)
-
     return None
 
 
@@ -67,10 +67,9 @@ inputpath = list(filter(lambda p: Path(p).name.startswith("pages_") and Path(p).
 assert len(inputpath) > 0
 inputpath.sort()
 inputpath = inputpath[-1]
+outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
 
 ks = get_keys(inputpath)
-
-
 file = open(inputpath, "r").readlines()
 for line in tqdm(file):
     elem = json.loads(line)
@@ -87,9 +86,8 @@ for line in tqdm(file):
     elem["Gesamtfläche"] = parse_float(elem["Gesamtfläche"])
     elem["Grundfläche"] = parse_float(elem["Grundfläche"])
     elem["Heizkosten (exkl. MWSt)"] = parse_float(elem["Heizkosten (exkl. MWSt)"])
-    elem.pop("Kaufpreis")  # links_price is more structured
     elem["Loggia"] = parse_float(elem["Loggia"])
-    elem["Maklerprovision:"] = parse_commission_fee(elem["Maklerprovision:"], parse_float(elem["links_price"]))  # make this cleaner with regex
+    elem["Maklerprovision:"] = parse_commission_fee(elem["Maklerprovision:"], parse_float(elem["links_price"]))
     elem["Miete"] = elem["Miete"].split("-")[0].strip() if elem["Miete"] else None
     elem["Miete"] = parse_float(elem["Miete"])
     elem["Monatliche Kosten (MWSt)"] = parse_float(elem["Monatliche Kosten (MWSt)"])
@@ -110,7 +108,6 @@ for line in tqdm(file):
     elem["Wohnfläche"] = elem["Wohnfläche"].split("-")[0].strip() if elem["Wohnfläche"] else None
     elem["Wohnfläche"] = parse_float(elem["Wohnfläche"])
     elem["Zimmer"] = parse_float(elem["Zimmer"])
-    elem.pop("address")  # links_address is structured
     elem["company_address"] = elem["company_address"].replace("Adresse", "").strip() if elem["company_address"] else None
     elem["company_broker_name"] = elem["company_broker_name"].replace("Kontakt", "").strip() if elem["company_broker_name"] else None
     elem["company_reference_id"] = elem["company_reference_id"].replace("Referenz ID", "").strip() if elem["company_reference_id"] else None
@@ -119,17 +116,29 @@ for line in tqdm(file):
     elem["energy_certificate"] = re.search(r"Energieklasse:\s*([A-Z])", elem["energy_certificate"]) if elem["energy_certificate"] else None
     elem["energy_certificate"] = elem["energy_certificate"].group(1) if elem["energy_certificate"] else None
     elem["last_update"] = elem["last_update"].replace("Zuletzt geändert: ", "").replace(" Uhr", "").replace(", ", " ").strip() if elem["last_update"] else None
-    elem.pop("links_m2")
     elem["links_num_rooms"] = parse_float(elem["links_num_rooms"])
     elem["links_price"] = parse_float(elem["links_price"])
 
-    elem = {k: v.lower() if isinstance(v, str) else v for k, v in elem.items()}
+    elem.pop("Kaufpreis")  # links_price is more structured
+    elem.pop("address")  # links_address is structured
+    elem.pop("links_m2")  # wohnfläche
+    elem.pop("links_url")  # url
+    elem.pop("links_num_rooms")  # zimmer
+    elem.pop("links_seller_name")  # company_name
+    elem.pop("Preis")  # price
 
-    print(json.dumps(elem, indent=4, ensure_ascii=False))
-    break
+    rename = {
+        "links_address": "address",
+        "links_price": "price",
+        "links_title": "title",
+        "links_type": "type",
+        "description_price": "total_additional_costs",
+    }
+    elem = {rename.get(k, k): v for k, v in elem.items()}
 
-
-# df = pd.DataFrame(columns=ks)
-# for line in tqdm(file):
-#     k = json.loads(line)
-#     df = df._append(k, ignore_index=True)
+    # store
+    with open(outputpath, "a") as f:
+        writer = csv.DictWriter(f, fieldnames=elem.keys())
+        if f.tell() == 0:
+            writer.writeheader()
+        writer.writerow(elem)
