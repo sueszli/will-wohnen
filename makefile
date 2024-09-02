@@ -59,43 +59,6 @@ monitor-kill:
 	rm -rf monitor-process.pid
 	rm -rf monitor-process.log
 
-# --------------------------------------------------------------- conda
-
-.PHONY: conda-get-yaml # convert requirements.txt to env.yaml file (idempotent)
-conda-get-yaml:
-	conda update -n base -c defaults conda
-	# conda config --env --set subdir osx-64
-	# conda config --env --set subdir osx-arm64
-	conda config --set auto_activate_base false
-	conda info
-	@bash -c '\
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda activate base; \
-		conda create --yes --name con python=3.11; \
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda activate con; \
-		\
-		pip install -r requirements.txt; \
-		\
-		conda env export --no-builds | grep -v "prefix:" > env.yml; \
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda deactivate; \
-		conda remove --yes --name con --all; \
-	'
-
-.PHONY: conda-install # install conda from env.yaml file
-conda-install:
-	@bash -c '\
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda activate base; \
-		conda env create --file env.yml; \
-	'
-
-.PHONY: conda-clean # wipe conda environment
-conda-clean:
-	# conda clean --all
-	@bash -c '\
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda activate base; \
-		conda remove --yes --name con --all; \
-		source $$(conda info --base)/etc/profile.d/conda.sh; conda deactivate; \
-	'
-
 # --------------------------------------------------------------- docker
 
 .PHONY: docker-install # run docker container
@@ -126,9 +89,9 @@ docker-clean:
 
 .PHONY: fmt # format codebase
 fmt:
-	pip install isort
-	pip install ruff
-	pip install autoflake
+	# pip install isort
+	# pip install ruff
+	# pip install autoflake
 
 	isort .
 	autoflake --remove-all-unused-imports --recursive --in-place .

@@ -81,7 +81,7 @@ def parse_page(url: str, html: str) -> dict:
     return data
 
 
-async def write_jsonl(links_data: dict, outputpath: Path):    
+async def write_jsonl(links_data: dict, outputpath: Path):
     url = links_data["links_url"]
     html = await fetch_async(url)
     data = parse_page(url, html)
