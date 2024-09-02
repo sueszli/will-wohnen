@@ -1,0 +1,9 @@
+aiohttp
+backoff
+beautifulsoup4
+filelock
+neo4j
+playwright
+playwright_stealth
+Requests
+tqdm
