@@ -68,7 +68,7 @@ docker-install:
 	docker-compose up --detach
 
 .PHONY: docker-build # save changes to container
-docker-install:
+docker-build:
 	docker-compose build
 
 .PHONY: docker-clean # wipe everything in docker
