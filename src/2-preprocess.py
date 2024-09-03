@@ -1,5 +1,7 @@
 import csv
+import hashlib
 import json
+import random
 import re
 from glob import glob
 from pathlib import Path
@@ -181,6 +183,15 @@ for elem in tqdm(dicts):
     elem.pop("links_title")
     elem.pop("title")
 
+    # ids
+    if not elem["url"]:
+        elem["url"] = hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
+    if not elem["company_reference_id"]:
+        elem["company_reference_id"] = hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
+    if not elem["company_broker_name"]:
+        elem["company_broker_name"] = "unknown"
+
+    # cleaning keys
     elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}  # remove special chars
     elem = {k.lower(): v for k, v in elem.items()}  # lowercase keys
     elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}  # lowercase vals
