@@ -1,6 +1,7 @@
 import csv
 import json
 import re
+import shutil
 from glob import glob
 from pathlib import Path
 from typing import Optional
@@ -76,6 +77,7 @@ assert len(inputpath) > 0
 inputpath.sort()
 inputpath = inputpath[-1]
 outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
+shutil.rmtree(outputpath, ignore_errors=True)
 
 dicts = list(map(lambda line: json.loads(line), open(inputpath, "r").readlines()))
 required_keys = get_keys(inputpath)
@@ -146,12 +148,15 @@ for elem in tqdm(dicts):
     elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
     elem.pop("Betriebskosten (exkl. MWSt)")
 
-    # drop inavailable columns
+    # lowercase all vals that aren't descriptions
+    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}
+
+    # drop inavailable keys
     for k in list(elem.keys()):
         if k not in available_keys:
             elem.pop(k)
 
-    # rename
+    # rename keys
     rename = {
         "links_address": "address",
         "links_price": "price",
@@ -160,6 +165,9 @@ for elem in tqdm(dicts):
         "description_price": "total_additional_costs",
     }
     elem = {rename.get(k, k): v for k, v in elem.items()}
+    elem = {k.replace(":", "").strip(): v for k, v in elem.items()}
+    elem = {k.replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}
+    elem = {k.lower(): v for k, v in elem.items()}
 
     # store
     with open(outputpath, "a") as f:
