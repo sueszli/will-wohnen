@@ -1,8 +1,39 @@
 import csv
 import glob
 from pathlib import Path
+import numpy as np
+import csv
+import json
+import re
+from glob import glob
+from pathlib import Path
+from typing import Optional
+
+import spacy
+import torch
+from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
+
 
 from neo4j import GraphDatabase
+
+
+
+nlp = spacy.load("de_core_news_lg")  # $ python -m spacy download de_core_news_lg
+device = "cuda" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu"
+model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2", device=device)
+model.eval()
+
+def get_embedding(text: str) -> torch.Tensor:
+    # for cosine sim, see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
+    sentences = nlp(text)
+    sentences = [str(sent) for sent in sentences.sents]
+    with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
+        embeddings = model.encode(sentences)
+    return embeddings
+
+
+
 
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")

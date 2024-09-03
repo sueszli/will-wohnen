@@ -1,3 +1,4 @@
+import numpy as np
 import csv
 import json
 import re
@@ -10,9 +11,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-nlp = spacy.load("de_core_news_lg")  # $ python -m spacy download de_core_news_lg
-model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2")
-model.eval()
+
 
 
 def get_keys(file: str) -> list:
@@ -75,16 +74,6 @@ def parse_commission_fee(string: str, kaufpreis: Optional[float] = None) -> Opti
         string = string.split("€")[1].strip()
         return parse_float(string)
     return None
-
-
-def get_embedding(text: str) -> list:
-    # for cosine sim, see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
-    sentences = nlp(text)
-    sentences = [str(sent) for sent in sentences.sents]
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
-        embeddings = model.encode(sentences)
-    return embeddings
 
 
 inputpath = glob(str(Path("./data/*.jsonl")))
@@ -165,7 +154,7 @@ for elem in tqdm(dicts):
 
     # get embeddings
     dks = ["description_additional", "description_equipment", "description_general", "description_location"]
-    elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
+    elem["description"] = ". ".join([elem[key] if elem[key] is not None else ". " for key in dks])
     for dk in dks:
         elem.pop(dk)
 
