@@ -1,12 +1,11 @@
 import functools
-import itertools
-import operator
-import time
 import random
 import secrets
+import time
 
 import numpy as np
 import torch
+
 
 def timeit(func):
     @functools.wraps(func)
@@ -14,8 +13,9 @@ def timeit(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(f'{func.__name__} took {end - start} seconds')
+        print(f"{func.__name__} took {end - start} seconds")
         return result
+
     return wrapper
 
 

@@ -2,11 +2,9 @@ import csv
 import glob
 from glob import glob
 from pathlib import Path
-from utils import timeit
 
 from neo4j import GraphDatabase
 from tqdm import tqdm
-
 
 # {
 #     "agreement_commission_fee": "101370.0",
@@ -131,10 +129,8 @@ def get_company_city_market_share(tx):
         ORDER BY share DESC
         """
     )
-    return [
-        {"company": record["company"], "share": record["share"]}
-        for record in result
-    ]
+    return [{"company": record["company"], "share": record["share"]} for record in result]
+
 
 def get_company_district_share(tx):
     result = tx.run(
@@ -153,6 +149,56 @@ def get_company_district_share(tx):
     )
     return [record["result"] for record in result]
 
+
+def get_company_net_worth(tx):
+    result = tx.run(
+        """
+        MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
+        WITH c.company_name AS company, p.property_price AS price
+        WHERE price IS NOT NULL AND price <> ''
+        WITH company, toFloat(price) AS numeric_price
+        WHERE NOT isNaN(numeric_price)
+        RETURN company, SUM(numeric_price) AS net_worth
+        ORDER BY net_worth DESC
+        """
+    )
+
+    return [{"company": record["company"], "net_worth": record["net_worth"]} for record in result]
+
+
+def get_broker_city_market_share(tx):
+    result = tx.run(
+        """
+        MATCH (b:Broker)-[:manages]->(p:Property)
+        WITH b.broker_id AS broker, COUNT(DISTINCT p) AS property_count
+        WITH COLLECT({broker: broker, count: property_count}) AS broker_counts
+        WITH broker_counts, REDUCE(total = 0, count IN broker_counts | total + count.count) AS total_properties
+        UNWIND broker_counts AS broker_data
+        RETURN broker_data.broker AS broker, toFloat(broker_data.count) / total_properties AS share
+        ORDER BY share DESC
+        """
+    )
+    return [{"broker": record["broker"], "share": record["share"]} for record in result]
+
+
+def get_broker_company_share(tx):
+    result = tx.run(
+        """
+        MATCH (c:Company)-[:employs]->(b:Broker)-[:manages]->(p:Property)
+        WITH c.company_name AS company, b.broker_id AS broker, COUNT(DISTINCT p) AS property_count
+        WITH company, COLLECT({broker: broker, count: property_count}) AS broker_counts
+        WITH company, broker_counts, REDUCE(total = 0, count IN broker_counts | total + count.count) AS total_properties
+        UNWIND broker_counts AS broker_data
+        WITH company, broker_data.broker AS broker, toFloat(broker_data.count) / total_properties AS share
+        ORDER BY company, share DESC
+        WITH company, COLLECT({broker: broker, share: share}) AS shares
+        RETURN {company: company, shares: shares} AS result
+        ORDER BY company
+        """
+    )
+    return [record["result"] for record in result]
+
+
 reset = False
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
@@ -163,22 +209,54 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         init_db(tx)
         print("initialized database")
 
+    # > which companies have most properties in vienna?
     # res = tx.read_transaction(get_company_city_market_share)
     # k = 10
     # print(f"top {k} companies by city market share")
     # for elem in res[:k]:
     #     print(f"\t{elem}")
 
-    res = tx.read_transaction(get_company_district_share)
-    k = 10
-    print(f"top {k} companies by district market share")
-    GREEN = "\033[92m"
-    END = "\033[0m"
-    for elem in res:
-        print(f"\tdistrict: {elem['district']}")
-        for cp in elem["shares"][:k]:
-            cname = cp["company"]
-            share = cp["share"]
-            if share >= 0.01:
-                cname = f"{GREEN}{cname}{END}"
-            print(f"\t\t{cname}: {share}")
+    # > which companies have most properties in each district?
+    # res = tx.read_transaction(get_company_district_share)
+    # k = 10
+    # print(f"top {k} companies by district market share")
+    # GREEN = "\033[92m"
+    # END = "\033[0m"
+    # for elem in res:
+    #     print(f"\tdistrict: {elem['district']}")
+    #     for cp in elem["shares"][:k]:
+    #         cname = cp["company"]
+    #         share = cp["share"]
+    #         if share >= 0.01:
+    #             cname = f"{GREEN}{cname}{END}"
+    #         print(f"\t\t{cname}: {share}")
+
+    # > which brokers have most properties in vienna?
+    # res = tx.read_transaction(get_broker_city_market_share)
+    # k = 10
+    # print(f"top {k} brokers by city market share")
+    # for elem in res[:k]:
+    #     print(f"\t{elem}")
+
+    # > which brokers have most properties per company?
+    # res = tx.read_transaction(get_broker_company_share)
+    # k = 5
+    # print(f"top {k} brokers by company")
+    # GREEN = "\033[92m"
+    # END = "\033[0m"
+    # for elem in res:
+    #     cname = elem["company"]
+    #     print(f"\tcompany: {cname}")
+    #     for cp in elem["shares"][:k]:
+    #         bname = cp["broker"]
+    #         share = cp["share"]
+    #         if share >= 0.5:
+    #             bname = f"{GREEN}{bname}{END}"
+    #         print(f"\t\t{bname}: {share}")
+
+    # > which companies have most money in properties?
+    # res = tx.read_transaction(get_company_net_worth)
+    # k = 10
+    # print(f"top {k} companies by net worth")
+    # for elem in res[:k]:
+    #     print(f"\t{elem}")
