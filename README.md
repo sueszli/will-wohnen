@@ -9,7 +9,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 
-usage:
+to untar
 
 ```bash
 tar -xzf data.tar.gz -C .
