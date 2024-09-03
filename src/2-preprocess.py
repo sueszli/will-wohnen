@@ -1,7 +1,6 @@
 import csv
 import json
 import re
-import shutil
 from glob import glob
 from pathlib import Path
 from typing import Optional
@@ -168,6 +167,9 @@ for elem in tqdm(dicts):
     elem = {k.replace(":", "").strip(): v for k, v in elem.items()}
     elem = {k.replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}
     elem = {k.lower(): v for k, v in elem.items()}
+
+    # round floats
+    elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()}
 
     # store
     with open(outputpath, "a") as f:
