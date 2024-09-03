@@ -5,58 +5,500 @@
 #    pip-compile --output-file=requirements.txt requirements.in
 #
 aiohappyeyeballs==2.4.0
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
 aiohttp==3.10.5
     # via -r requirements.in
 aiosignal==1.3.1
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
+annotated-types==0.7.0
+    # via
+    #   -r requirements.in
+    #   pydantic
+appnope==0.1.4
+    # via
+    #   -r requirements.in
+    #   ipykernel
+asttokens==2.4.1
+    # via
+    #   -r requirements.in
+    #   stack-data
 attrs==24.2.0
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
+autoflake==2.3.1
+    # via -r requirements.in
 backoff==2.2.1
     # via -r requirements.in
 beautifulsoup4==4.12.3
     # via -r requirements.in
+blis==0.7.11
+    # via
+    #   -r requirements.in
+    #   thinc
+catalogue==2.0.10
+    # via
+    #   -r requirements.in
+    #   spacy
+    #   srsly
+    #   thinc
 certifi==2024.8.30
-    # via requests
+    # via
+    #   -r requirements.in
+    #   requests
 charset-normalizer==3.3.2
-    # via requests
-filelock==3.15.4
+    # via
+    #   -r requirements.in
+    #   requests
+click==8.1.7
+    # via
+    #   -r requirements.in
+    #   typer
+cloudpathlib==0.19.0
+    # via
+    #   -r requirements.in
+    #   weasel
+comm==0.2.2
+    # via
+    #   -r requirements.in
+    #   ipykernel
+confection==0.1.5
+    # via
+    #   -r requirements.in
+    #   thinc
+    #   weasel
+contourpy==1.3.0
+    # via
+    #   -r requirements.in
+    #   matplotlib
+cycler==0.12.1
+    # via
+    #   -r requirements.in
+    #   matplotlib
+cymem==2.0.8
+    # via
+    #   -r requirements.in
+    #   preshed
+    #   spacy
+    #   thinc
+de-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.7.0/de_core_news_lg-3.7.0-py3-none-any.whl#sha256=1451e06dedb5c3bb096127bf7c2117c253265fdfcad29ee488ff57bec5f78eaa
     # via -r requirements.in
+debugpy==1.8.5
+    # via
+    #   -r requirements.in
+    #   ipykernel
+decorator==5.1.1
+    # via
+    #   -r requirements.in
+    #   ipython
+executing==2.1.0
+    # via
+    #   -r requirements.in
+    #   stack-data
+filelock==3.15.4
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   torch
+    #   transformers
+fonttools==4.53.1
+    # via
+    #   -r requirements.in
+    #   matplotlib
 frozenlist==1.4.1
     # via
+    #   -r requirements.in
     #   aiohttp
     #   aiosignal
+fsspec==2024.6.1
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   torch
 greenlet==3.0.3
-    # via playwright
+    # via
+    #   -r requirements.in
+    #   playwright
+huggingface-hub==0.24.6
+    # via
+    #   -r requirements.in
+    #   sentence-transformers
+    #   tokenizers
+    #   transformers
 idna==3.8
     # via
+    #   -r requirements.in
     #   requests
     #   yarl
+ipykernel==6.29.5
+    # via -r requirements.in
+ipython==8.27.0
+    # via
+    #   -r requirements.in
+    #   ipykernel
+isort==5.13.2
+    # via -r requirements.in
+jedi==0.19.1
+    # via
+    #   -r requirements.in
+    #   ipython
+jinja2==3.1.4
+    # via
+    #   -r requirements.in
+    #   spacy
+    #   torch
+joblib==1.4.2
+    # via
+    #   -r requirements.in
+    #   scikit-learn
+jupyter-client==8.6.2
+    # via
+    #   -r requirements.in
+    #   ipykernel
+jupyter-core==5.7.2
+    # via
+    #   -r requirements.in
+    #   ipykernel
+    #   jupyter-client
+kiwisolver==1.4.5
+    # via
+    #   -r requirements.in
+    #   matplotlib
+langcodes==3.4.0
+    # via
+    #   -r requirements.in
+    #   spacy
+language-data==1.2.0
+    # via
+    #   -r requirements.in
+    #   langcodes
+marisa-trie==1.2.0
+    # via
+    #   -r requirements.in
+    #   language-data
+markdown-it-py==3.0.0
+    # via
+    #   -r requirements.in
+    #   rich
+markupsafe==2.1.5
+    # via
+    #   -r requirements.in
+    #   jinja2
+matplotlib==3.9.2
+    # via -r requirements.in
+matplotlib-inline==0.1.7
+    # via
+    #   -r requirements.in
+    #   ipykernel
+    #   ipython
+mdurl==0.1.2
+    # via
+    #   -r requirements.in
+    #   markdown-it-py
+mpmath==1.3.0
+    # via
+    #   -r requirements.in
+    #   sympy
 multidict==6.0.5
     # via
+    #   -r requirements.in
     #   aiohttp
     #   yarl
+murmurhash==1.0.10
+    # via
+    #   -r requirements.in
+    #   preshed
+    #   spacy
+    #   thinc
 neo4j==5.24.0
     # via -r requirements.in
+nest-asyncio==1.6.0
+    # via
+    #   -r requirements.in
+    #   ipykernel
+networkx==3.3
+    # via
+    #   -r requirements.in
+    #   torch
+numpy==1.26.4
+    # via
+    #   -r requirements.in
+    #   blis
+    #   contourpy
+    #   matplotlib
+    #   scikit-learn
+    #   scipy
+    #   sentence-transformers
+    #   spacy
+    #   thinc
+    #   transformers
+packaging==24.1
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   ipykernel
+    #   matplotlib
+    #   spacy
+    #   thinc
+    #   transformers
+    #   weasel
+parso==0.8.4
+    # via
+    #   -r requirements.in
+    #   jedi
+pexpect==4.9.0
+    # via
+    #   -r requirements.in
+    #   ipython
+pillow==10.4.0
+    # via
+    #   -r requirements.in
+    #   matplotlib
+    #   sentence-transformers
+platformdirs==4.2.2
+    # via
+    #   -r requirements.in
+    #   jupyter-core
 playwright==1.46.0
     # via
     #   -r requirements.in
     #   playwright-stealth
 playwright-stealth==1.0.6
     # via -r requirements.in
+preshed==3.0.9
+    # via
+    #   -r requirements.in
+    #   spacy
+    #   thinc
+prompt-toolkit==3.0.47
+    # via
+    #   -r requirements.in
+    #   ipython
+protobuf==5.28.0
+    # via -r requirements.in
+psutil==6.0.0
+    # via
+    #   -r requirements.in
+    #   ipykernel
+ptyprocess==0.7.0
+    # via
+    #   -r requirements.in
+    #   pexpect
+pure-eval==0.2.3
+    # via
+    #   -r requirements.in
+    #   stack-data
+pydantic==2.8.2
+    # via
+    #   -r requirements.in
+    #   confection
+    #   spacy
+    #   thinc
+    #   weasel
+pydantic-core==2.20.1
+    # via
+    #   -r requirements.in
+    #   pydantic
 pyee==11.1.0
-    # via playwright
+    # via
+    #   -r requirements.in
+    #   playwright
+pyflakes==3.2.0
+    # via
+    #   -r requirements.in
+    #   autoflake
+pygments==2.18.0
+    # via
+    #   -r requirements.in
+    #   ipython
+    #   rich
+pyparsing==3.1.4
+    # via
+    #   -r requirements.in
+    #   matplotlib
+python-dateutil==2.9.0.post0
+    # via
+    #   -r requirements.in
+    #   jupyter-client
+    #   matplotlib
 pytz==2024.1
-    # via neo4j
+    # via
+    #   -r requirements.in
+    #   neo4j
+pyyaml==6.0.2
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   transformers
+pyzmq==26.2.0
+    # via
+    #   -r requirements.in
+    #   ipykernel
+    #   jupyter-client
+regex==2024.7.24
+    # via
+    #   -r requirements.in
+    #   transformers
 requests==2.32.3
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   spacy
+    #   transformers
+    #   weasel
+rich==13.8.0
+    # via
+    #   -r requirements.in
+    #   typer
+ruff==0.6.3
     # via -r requirements.in
+safetensors==0.4.4
+    # via
+    #   -r requirements.in
+    #   transformers
+scikit-learn==1.5.1
+    # via
+    #   -r requirements.in
+    #   sentence-transformers
+scipy==1.14.1
+    # via
+    #   -r requirements.in
+    #   scikit-learn
+    #   sentence-transformers
+sentence-transformers==3.0.1
+    # via -r requirements.in
+sentencepiece==0.2.0
+    # via -r requirements.in
+shellingham==1.5.4
+    # via
+    #   -r requirements.in
+    #   typer
+six==1.16.0
+    # via
+    #   -r requirements.in
+    #   asttokens
+    #   python-dateutil
+smart-open==7.0.4
+    # via
+    #   -r requirements.in
+    #   weasel
 soupsieve==2.6
-    # via beautifulsoup4
+    # via
+    #   -r requirements.in
+    #   beautifulsoup4
+spacy==3.7.6
+    # via
+    #   -r requirements.in
+    #   de-core-news-lg
+spacy-legacy==3.0.12
+    # via
+    #   -r requirements.in
+    #   spacy
+spacy-loggers==1.0.5
+    # via
+    #   -r requirements.in
+    #   spacy
+srsly==2.4.8
+    # via
+    #   -r requirements.in
+    #   confection
+    #   spacy
+    #   thinc
+    #   weasel
+stack-data==0.6.3
+    # via
+    #   -r requirements.in
+    #   ipython
+sympy==1.13.2
+    # via
+    #   -r requirements.in
+    #   torch
+thinc==8.2.5
+    # via
+    #   -r requirements.in
+    #   spacy
+threadpoolctl==3.5.0
+    # via
+    #   -r requirements.in
+    #   scikit-learn
+tokenizers==0.19.1
+    # via
+    #   -r requirements.in
+    #   transformers
+torch==2.4.0
+    # via
+    #   -r requirements.in
+    #   sentence-transformers
+tornado==6.4.1
+    # via
+    #   -r requirements.in
+    #   ipykernel
+    #   jupyter-client
 tqdm==4.66.5
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   sentence-transformers
+    #   spacy
+    #   transformers
+traitlets==5.14.3
+    # via
+    #   -r requirements.in
+    #   comm
+    #   ipykernel
+    #   ipython
+    #   jupyter-client
+    #   jupyter-core
+    #   matplotlib-inline
+transformers==4.44.2
+    # via
+    #   -r requirements.in
+    #   sentence-transformers
+typer==0.12.5
+    # via
+    #   -r requirements.in
+    #   spacy
+    #   weasel
 typing-extensions==4.12.2
-    # via pyee
+    # via
+    #   -r requirements.in
+    #   huggingface-hub
+    #   ipython
+    #   pydantic
+    #   pydantic-core
+    #   pyee
+    #   torch
+    #   typer
 urllib3==2.2.2
-    # via requests
+    # via
+    #   -r requirements.in
+    #   requests
+wasabi==1.1.3
+    # via
+    #   -r requirements.in
+    #   spacy
+    #   thinc
+    #   weasel
+wcwidth==0.2.13
+    # via
+    #   -r requirements.in
+    #   prompt-toolkit
+weasel==0.4.1
+    # via
+    #   -r requirements.in
+    #   spacy
+wrapt==1.16.0
+    # via
+    #   -r requirements.in
+    #   smart-open
 yarl==1.9.7
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

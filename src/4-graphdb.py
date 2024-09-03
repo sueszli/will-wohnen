@@ -1,20 +1,14 @@
-from neo4j import GraphDatabase
-import json
 import csv
 import glob
 from pathlib import Path
 
-
-
-
-
-
+from neo4j import GraphDatabase
 
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
 driver = GraphDatabase.driver(uri, auth=auth)
 session = driver.session(database="neo4j")
-session.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n")) # wipe
+session.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))  # wipe
 
 inputpath = glob.glob(str(Path.cwd() / "data" / "pages_*.csv"))
 inputpath = list(filter(lambda p: Path(p).name.startswith("pages_") and Path(p).name.endswith(".csv"), inputpath))
@@ -33,40 +27,42 @@ dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.item
 #     "description_equipment": "Balkonanzahl:1Balkonfläche:8,98 m²Bad mit DuscheBoden: FliesenbodenBoden: ParkettbodenHeizung: Etage...",
 #     "description_general": "Kaufen Sie heute diese wunderschöne Wohnung in 1200 Wien und Sie werden es nie bereuen! Diese Immobi...",
 #     "description_location": "Wallensteinplatz, Jägerstraße, Augarten, Donaukanalöffentliche Verkehrsanbindung: U4 und U6 // Straß...",
-# 
+
 # property features:
-#     "energy_certificate": "d",
-#     "heizung": "etagenheizung",
 #     "address": "1200 wien, 20. bezirk, brigittenau, jägerstraße",
 #     "bautyp": "altbau",
-#     "böden": "parkett",
-#     "objekttyp": "wohnung",
+#     "boeden": "parkett",
+#     "energy_certificate": "d",
 #     "price": "229000.0",
+#     "url": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1200-brigittenau/-wow-die-perfe...",
+#     "objekttyp": "wohnung",
 #     "stockwerke": "3",
 #     "title": "++ wow ++ die perfekte stadtwohnung + aufwendige sanierung + balkon im innenhof + inkl. küche",
 #     "total_additional_costs": "5759.43",
 #     "type": "balkon",
-#     "url": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1200-brigittenau/-wow-die-perfe...",
-#     "verfügbar": "2027",
-#     "wohnfläche": "38.05",
+#     "verfuegbar": "2027",
+#     "wohnflaeche": "38.05",
 #     "zimmer": "2.0",
 #     "zustand": "renoviert"
-# 
-# real estate company:
+#     "heizung": "etagenheizung",
+
+# company features:
 #     "company_address": "messendorferstraße 71a8041 graz",
 #     "company_name": "schantl ith immobilientreuhand gmbh",
 #     "company_reference_id": "267143",
 #     "company_url": "http://www.schantl-ith.at",
-# 
+
 # broker:
 #     "company_broker_name": "magdalena tiatco-frank",
-# 
-# brokerage:
+
+
+# agreement:
 #     "last_update": "26.08.2024 12:00",
 #     "maklerprovision": "6870.0",
 
 
 for elem in dicts:
+    pass
 
 
 # def create_nodes(tx):

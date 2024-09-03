@@ -21,7 +21,7 @@ init:
 .PHONY: lock # freeze pip and lock reqs
 lock:
 	@bash -c "source .venv/bin/activate && pip freeze > requirements.in"
-	pip-compile requirements.in -o requirements.txt
+	pip-compile requirements.in -o requirements.txt -vvv
 
 # --------------------------------------------------------------- docker
 

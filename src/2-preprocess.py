@@ -5,7 +5,14 @@ from glob import glob
 from pathlib import Path
 from typing import Optional
 
+import spacy
+import torch
+from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+
+nlp = spacy.load("de_core_news_lg")  # $ python -m spacy download de_core_news_lg
+model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2")
+model.eval()
 
 
 def get_keys(file: str) -> list:
@@ -68,6 +75,16 @@ def parse_commission_fee(string: str, kaufpreis: Optional[float] = None) -> Opti
         string = string.split("€")[1].strip()
         return parse_float(string)
     return None
+
+
+def get_embedding(text: str) -> list:
+    # for cosine sim, see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
+    sentences = nlp(text)
+    sentences = [str(sent) for sent in sentences.sents]
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
+        embeddings = model.encode(sentences)
+    return embeddings
 
 
 inputpath = glob(str(Path("./data/*.jsonl")))
@@ -146,6 +163,10 @@ for elem in tqdm(dicts):
         elem["Betriebskosten (inkl. MWSt)"] = elem["Betriebskosten (exkl. MWSt)"] * 1.2
     elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
     elem.pop("Betriebskosten (exkl. MWSt)")
+    dks = ["description_additional", "description_equipment", "description_general", "description_location"]
+    elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
+    for dk in dks:
+        elem.pop(dk)
 
     # lowercase all vals that aren't descriptions
     elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}
@@ -167,6 +188,15 @@ for elem in tqdm(dicts):
     elem = {k.replace(":", "").strip(): v for k, v in elem.items()}
     elem = {k.replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}
     elem = {k.lower(): v for k, v in elem.items()}
+
+    # replace umlaute in keys
+    rename = {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+    }
+    elem = {k.translate(str.maketrans(rename)): v for k, v in elem.items()}
 
     # round floats
     elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()}
