@@ -1,21 +1,12 @@
 import csv
 import glob
-import shutil
 from glob import glob
 from pathlib import Path
 
-from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase
-from neo4j.exceptions import ClientError
 from tqdm import tqdm
 
-from graphdb_inference import *
 from utils import *
-
-
-"""
-initialization
-"""
 
 
 @timeit
@@ -92,70 +83,8 @@ def init_db(tx):
         )
 
 
-"""
-main loop
-"""
-
-uri = "bolt://main:7687"
-gds = GraphDataScience(uri)
-with GraphDatabase.driver(uri).session() as tx:
-    reset = False
-    if reset:
-        tx.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
-        init_db(tx)
-        print("reset and initialized database")
-
-    """
-    graph data science
-    """
-
-    try:
-        gds.graph.drop("gds-graph")
-    except ClientError:
-        pass
-    G, result = gds.graph.project("gds-graph", ["Company", "Broker", "Property"], ["employs", "manages"])
-    print(f"projected: {result['nodeCount']} nodes, {result['relationshipCount']} edges")
-
-    """
-    inference
-    """
-
-    outpath_base = Path.cwd() / "data" / "inference"
-    shutil.rmtree(outpath_base, ignore_errors=True)
-    outpath_base.mkdir(parents=True, exist_ok=True)
-
-    # filename = outpath_base / "district_price_feature_influence.csv"
-    # res = tx.execute_read(get_district_price_feature_influence)
-    # dump_to_csv(filename, res)
-
-    # filename = outpath_base / "company_city_market_share.csv"
-    # res = tx.execute_read(get_company_city_market_share)
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_company_district_share)
-    # filename = outpath_base / "company_district_share.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_company_net_worth)
-    # filename = outpath_base / "company_net_worth.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_broker_city_market_share)
-    # filename = outpath_base / "broker_city_market_share.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_broker_company_share)
-    # filename = outpath_base / "broker_company_share.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_broker_property_net_worth)
-    # filename = outpath_base / "broker_property_net_worth.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_broker_performance_ranking)
-    # filename = outpath_base / "broker_performance_ranking.csv"
-    # dump_to_csv(filename, res)
-
-    # res = tx.execute_read(get_company_broker_utilization)
-    # filename = outpath_base / "company_broker_utilization.csv"
-    # dump_to_csv(filename, res)
+URI = "bolt://main:7687"
+with GraphDatabase.driver(URI).session() as session:
+    session.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
+    init_db(session)
+    print("reset and initialized database")
