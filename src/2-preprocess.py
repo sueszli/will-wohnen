@@ -164,7 +164,7 @@ for elem in tqdm(dicts):
             elem.pop(k)
 
     # get embeddings
-    dks = [k for k in elem.keys() if k.startswith("description_")]
+    dks = ["description_additional", "description_equipment", "description_general", "description_location"]
     elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
     for dk in dks:
         elem.pop(dk)
