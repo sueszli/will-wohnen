@@ -72,50 +72,7 @@ def parse_commission_fee(string: str, kaufpreis: Optional[float] = None) -> Opti
     return None
 
 
-def get_embedding(text: str):
-    """
-    one could use nlp models to semantically embed titles, descriptions, etc.
-
-    see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
-
-    > dks = ["description_additional", "description_equipment", "description_general", "description_location"]
-    > elem["description"] = get_embedding(". ".join([elem[key] if elem[key] is not None else ". " for key in dks]))
-    """
-
-    import spacy
-    import torch
-    from sentence_transformers import SentenceTransformer
-
-    nlp = spacy.load("de_core_news_lg")  # $ python -m spacy download de_core_news_lg
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu"
-    model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2", device=device)
-    model.eval()
-
-    sentences = nlp(text)
-    sentences = [str(sent) for sent in sentences.sents]
-    with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
-        embeddings = model.encode(sentences)
-    return embeddings
-
-
-inputpath = glob(str(Path("./data/*.jsonl")))
-inputpath = list(filter(lambda p: Path(p).name.startswith("pages_") and Path(p).name.endswith(".jsonl"), inputpath))
-assert len(inputpath) > 0
-inputpath.sort()
-inputpath = inputpath[-1]
-outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
-outputpath.unlink(missing_ok=True)
-
-dicts = list(map(lambda line: json.loads(line), open(inputpath, "r").readlines()))
-required_keys = get_keys(inputpath)
-dicts = list(map(lambda elem: {key: elem.get(key) for key in required_keys}, dicts))  # use same keys in all jsonl lines
-assert all([set(dicts[0].keys()) == set(elem.keys()) for elem in dicts])
-
-threshold = 0.5  # only keep keys that are available in more than 50% of the data (good treshhold based on manual inspection)
-available_keys = get_available_keys(dicts, threshold)
-
-for elem in tqdm(dicts):
-    # preprocess
+def parse_fields(elem: dict) -> dict:
     elem["Ablöse"] = parse_float(elem["Ablöse"])
     elem["Balkon"] = parse_float(elem["Balkon"])
     elem["Betriebskosten (exkl. MWSt)"] = parse_float(elem["Betriebskosten (exkl. MWSt)"])
@@ -159,31 +116,62 @@ for elem in tqdm(dicts):
     elem["last_update"] = elem["last_update"].replace("Zuletzt geändert: ", "").replace(" Uhr", "").replace(", ", " ").strip() if elem["last_update"] else None
     elem["links_num_rooms"] = parse_float(elem["links_num_rooms"])
     elem["links_price"] = parse_float(elem["links_price"])
+    elem["links_address"] = int(elem["links_address"][:4]) if elem["links_address"] and elem["links_address"][:4].isdigit() else None
+    return elem
 
-    # duplicate keys
-    elem.pop("Kaufpreis")  # links_price is more structured
-    elem.pop("address")  # links_address is structured
-    elem.pop("links_m2")  # wohnfläche
-    elem.pop("links_url")  # url
-    elem.pop("links_num_rooms")  # zimmer
-    elem.pop("links_seller_name")  # company_name
-    elem.pop("Preis")  # links_price
-    elem.pop("Monatliche Kosten (MWSt)")  # doesn't mean anything
+
+def get_embedding(text: str):
+    """
+    one could use nlp models to semantically embed titles, descriptions, etc.
+
+    see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
+
+    > dks = ["description_additional", "description_equipment", "description_general", "description_location"]
+    > elem["description"] = get_embedding(". ".join([elem[key] if elem[key] is not None else ". " for key in dks]))
+    """
+
+    import spacy
+    import torch
+    from sentence_transformers import SentenceTransformer
+
+    nlp = spacy.load("de_core_news_lg")  # $ python -m spacy download de_core_news_lg
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu"
+    model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2", device=device)
+    model.eval()
+
+    sentences = nlp(text)
+    sentences = [str(sent) for sent in sentences.sents]
+    with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
+        embeddings = model.encode(sentences)
+    return embeddings
+
+
+inputpath = glob(str(Path("./data/*.jsonl")))
+inputpath = list(filter(lambda p: Path(p).name.startswith("pages_") and Path(p).name.endswith(".jsonl"), inputpath))
+assert len(inputpath) > 0
+inputpath.sort()
+inputpath = inputpath[-1]
+outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
+outputpath.unlink(missing_ok=True)
+
+dicts = list(map(lambda line: json.loads(line), open(inputpath, "r").readlines()))
+required_keys = get_keys(inputpath)
+dicts = list(map(lambda elem: {key: elem.get(key) for key in required_keys}, dicts))  # use same keys in all jsonl lines
+assert all([set(dicts[0].keys()) == set(elem.keys()) for elem in dicts])
+
+threshold = 0.05  # arbitrary threshold
+available_keys = get_available_keys(dicts, threshold)
+
+for elem in tqdm(dicts):
+    # preprocess
+    elem = parse_fields(elem)
 
     # unavailable keys
     for k in list(elem.keys()):
         if k not in available_keys:
             elem.pop(k)
 
-    # useless keys
-    elem.pop("description_additional")
-    elem.pop("description_equipment")
-    elem.pop("description_general")
-    elem.pop("description_location")
-    elem.pop("links_title")
-    elem.pop("title")
-
-    # ids
+    # generate ids
     if not elem["url"]:
         elem["url"] = hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
     if not elem["company_reference_id"]:
@@ -191,11 +179,66 @@ for elem in tqdm(dicts):
     if not elem["company_broker_name"]:
         elem["company_broker_name"] = "unknown"
 
-    # cleaning keys
+    # delete: duplicate keys
+    elem.pop("Kaufpreis", None)  # links_price is more structured
+    elem.pop("address", None)  # links_address is structured
+    elem.pop("links_m2", None)  # wohnfläche
+    elem.pop("links_url", None)  # url
+    elem.pop("links_num_rooms", None)  # zimmer
+    elem.pop("links_seller_name", None)  # company_name
+    elem.pop("Preis", None)  # links_price
+    # delete: textual descriptions, not using embeddings
+    elem.pop("description_additional", None)
+    elem.pop("description_equipment", None)
+    elem.pop("description_general", None)
+    elem.pop("description_location", None)
+    elem.pop("links_title", None)
+    elem.pop("title", None)
+    elem.pop("Zusatzinformation:", None)
+    # delete: useless
+    elem.pop("Monatliche Kosten (MWSt)", None)
+
+    rename_map = {
+        "Balkon": "property_balcony",
+        "Bautyp": "property_building_type",
+        "Böden": "property_flooring",
+        "Fertigstellung": "property_completion",
+        "Garten": "property_garden",
+        "Gesamtfläche": "property_total_area",
+        "Heizung": "property_heating",
+        "Loggia": "property_loggia",
+        "Maklerprovision:": "agreement_commission_fee",
+        "Monatliche Kosten (inkl. MWSt)": "property_monthly_costs",
+        "Nutzfläche": "property_usable_area",
+        "Objekttyp": "property_type",
+        "Sonstige Kosten (exkl. MWSt)": "property_other_costs",
+        "Status": "property_status",
+        "Stockwerk(e)": "property_floor",
+        "Terrasse": "property_terrace",
+        "Topnummer": "property_top_number",
+        "Verfügbar": "property_availabilty",
+        "Wohneinheiten": "property_units",
+        "Wohnfläche": "property_living_area",
+        "Zimmer": "property_rooms",
+        "Zustand": "property_condition",
+        "company_address": "company_address",
+        "company_broker_name": "broker_name",
+        "company_name": "company_name",
+        "company_reference_id": "company_id",
+        "company_url": "company_url",
+        "description_price": "property_utilities",
+        "energy_certificate": "property_energy_certificate",
+        "last_update": "agreement_last_updated",
+        "links_address": "property_district",
+        "links_price": "property_price",
+        "links_type": "property_features",
+        "url": "property_url",
+    }
+    elem = {rename_map[k]: v for k, v in elem.items()}
     elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}  # remove special chars
     elem = {k.lower(): v for k, v in elem.items()}  # lowercase keys
-    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}  # lowercase vals
     elem = {k.translate(str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})): v for k, v in elem.items()}  # replace umlaute
+    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}  # lowercase vals
     elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()}  # round floats
 
     with open(outputpath, "a") as f:
