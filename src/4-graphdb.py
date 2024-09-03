@@ -136,13 +136,11 @@ graph data science
 main loop
 """
 
-reset = False
+reset = True
 uri = "bolt://main:7687"
-auth = ("neo4j", "password")
+gds = GraphDataScience(uri)
 
-gds = GraphDataScience(uri, auth=auth)
-
-with GraphDatabase.driver(uri, auth=auth).session() as tx:
+with GraphDatabase.driver(uri).session() as tx:
     if reset:
         tx.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
         print("reset database")
