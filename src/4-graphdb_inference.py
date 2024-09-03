@@ -265,7 +265,3 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         writer = csv.DictWriter(f, fieldnames=res[0].keys())
         writer.writeheader()
         writer.writerows(res)
-    # k = 10
-    # print(f"top {k} companies by net worth")
-    # for elem in res[:k]:
-    #     print(f"\t{elem}")
