@@ -217,11 +217,12 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         init_db(tx)
         print("initialized database")
 
-    outpath_base = Path.cwd() / "data-inference"
+    outpath_base = Path.cwd() / "data" / "inference"
+    outpath_base.mkdir(parents=True, exist_ok=True)
 
     # > which companies have most properties in vienna?
     filename = outpath_base / "company_city_market_share.csv"
-    res = tx.read_transaction(get_company_city_market_share)
+    res = tx.execute_read(get_company_city_market_share)
     filename.unlink(missing_ok=True)
     with open(filename, "w") as f:
         writer = csv.DictWriter(f, fieldnames=res[0].keys())
@@ -229,7 +230,7 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         writer.writerows(res)
 
     # > which companies have most properties in each district?
-    res = tx.read_transaction(get_company_district_share)
+    res = tx.execute_read(get_company_district_share)
     filename = outpath_base / "company_district_share.csv"
     filename.unlink(missing_ok=True)
     res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"district": elem["district"], **x}, elem["shares"])), res)))
@@ -239,7 +240,7 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         writer.writerows(res)
 
     # > which brokers have most properties in vienna?
-    res = tx.read_transaction(get_broker_city_market_share)
+    res = tx.execute_read(get_broker_city_market_share)
     filename = outpath_base / "broker_city_market_share.csv"
     filename.unlink(missing_ok=True)
     with open(filename, "w") as f:
@@ -248,7 +249,7 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         writer.writerows(res)
 
     # > which brokers have most properties per company?
-    res = tx.read_transaction(get_broker_company_share)
+    res = tx.execute_read(get_broker_company_share)
     filename = outpath_base / "broker_company_share.csv"
     filename.unlink(missing_ok=True)
     res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"company": elem["company"], **x}, elem["shares"])), res)))
@@ -258,7 +259,7 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         writer.writerows(res)
 
     # > which companies have most money in properties?
-    res = tx.read_transaction(get_company_net_worth)
+    res = tx.execute_read(get_company_net_worth)
     filename = outpath_base / "company_net_worth.csv"
     filename.unlink(missing_ok=True)
     with open(filename, "w") as f:
