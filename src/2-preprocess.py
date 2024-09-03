@@ -77,7 +77,7 @@ assert len(inputpath) > 0
 inputpath.sort()
 inputpath = inputpath[-1]
 outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
-shutil.rmtree(outputpath, ignore_errors=True)
+outputpath.unlink(missing_ok=True)
 
 dicts = list(map(lambda line: json.loads(line), open(inputpath, "r").readlines()))
 required_keys = get_keys(inputpath)
