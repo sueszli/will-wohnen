@@ -158,25 +158,23 @@ for elem in tqdm(dicts):
     elem.pop("Preis")  # links_price
     elem.pop("Monatliche Kosten (MWSt)")  # doesn't mean anything
 
-    # merge columns
-    if elem["Betriebskosten (exkl. MWSt)"] and not elem["Betriebskosten (inkl. MWSt)"]:
-        elem["Betriebskosten (inkl. MWSt)"] = elem["Betriebskosten (exkl. MWSt)"] * 1.2
-    elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
-    elem.pop("Betriebskosten (exkl. MWSt)")
-    dks = ["description_additional", "description_equipment", "description_general", "description_location"]
-    elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
-    for dk in dks:
-        elem.pop(dk)
-
-    # lowercase all vals that aren't descriptions
-    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}
-
     # drop inavailable keys
     for k in list(elem.keys()):
         if k not in available_keys:
             elem.pop(k)
 
-    # rename keys
+    # merge keys
+    if elem["Betriebskosten (exkl. MWSt)"] and not elem["Betriebskosten (inkl. MWSt)"]:
+        elem["Betriebskosten (inkl. MWSt)"] = elem["Betriebskosten (exkl. MWSt)"] * 1.2
+    elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
+    elem.pop("Betriebskosten (exkl. MWSt)")
+
+    # get embeddings
+    dks = [k for k in elem.keys() if k.startswith("description_")]
+    elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
+    for dk in dks:
+        elem.pop(dk)
+
     rename = {
         "links_address": "address",
         "links_price": "price",
@@ -184,24 +182,13 @@ for elem in tqdm(dicts):
         "links_type": "type",
         "description_price": "total_additional_costs",
     }
-    elem = {rename.get(k, k): v for k, v in elem.items()}
-    elem = {k.replace(":", "").strip(): v for k, v in elem.items()}
-    elem = {k.replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}
-    elem = {k.lower(): v for k, v in elem.items()}
+    elem = {rename.get(k, k): v for k, v in elem.items()} # rename keys
+    elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()} # remove special chars
+    elem = {k.lower(): v for k, v in elem.items()} # lowercase keys
+    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()} # lowercase vals
+    elem = {k.translate(str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})): v for k, v in elem.items()} # replace umlaute
+    elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()} # round floats
 
-    # replace umlaute in keys
-    rename = {
-        "ä": "ae",
-        "ö": "oe",
-        "ü": "ue",
-        "ß": "ss",
-    }
-    elem = {k.translate(str.maketrans(rename)): v for k, v in elem.items()}
-
-    # round floats
-    elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()}
-
-    # store
     with open(outputpath, "a") as f:
         writer = csv.DictWriter(f, fieldnames=elem.keys(), quoting=csv.QUOTE_NONNUMERIC)
         if f.tell() == 0:
