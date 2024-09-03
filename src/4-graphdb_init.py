@@ -6,9 +6,6 @@ from pathlib import Path
 from neo4j import GraphDatabase
 from tqdm import tqdm
 
-"""
-utils
-"""
 
 # {
 #     "agreement_commission_fee": "101370.0",
@@ -61,42 +58,53 @@ def init_db(tx):
     dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.items()}, dicts))  # get null
 
     for elem in tqdm(dicts):
-
-        def store_elem(tx, elem):
-            # broker
-            tx.run(
+        # broker
+        tx.execute_write(
+            lambda tx, elem: tx.run(
                 """
                 MERGE (b:Broker {broker_id: $broker_id})
                 """,
                 elem,
-            )
-            # company
-            tx.run(
+            ),
+            elem,
+        )
+        # company
+        tx.execute_write(
+            lambda tx, elem: tx.run(
                 """
                 MERGE (c:Company {company_id: $company_id})
                 ON CREATE SET c.company_address = $company_address, c.company_name = $company_name, c.company_url = $company_url
                 """,
                 elem,
-            )
-            # property
-            tx.run(
+            ),
+            elem,
+        )
+        # property
+        tx.execute_write(
+            lambda tx, elem: tx.run(
                 """
                 MERGE (p:Property {property_id: $property_id})
                 ON CREATE SET p.property_availabilty = $property_availabilty, p.property_balcony = $property_balcony, p.property_building_type = $property_building_type, p.property_completion = $property_completion, p.property_condition = $property_condition, p.property_district = $property_district, p.property_energy_certificate = $property_energy_certificate, p.property_features = $property_features, p.property_floor = $property_floor, p.property_flooring = $property_flooring, p.property_garden = $property_garden, p.property_heating = $property_heating, p.property_living_area = $property_living_area, p.property_loggia = $property_loggia, p.property_monthly_costs = $property_monthly_costs, p.property_other_costs = $property_other_costs, p.property_price = $property_price, p.property_rooms = $property_rooms, p.property_status = $property_status, p.property_terrace = $property_terrace, p.property_top_number = $property_top_number, p.property_total_area = $property_total_area, p.property_type = $property_type, p.property_units = $property_units, p.property_usable_area = $property_usable_area, p.property_utilities = $property_utilities
                 """,
                 elem,
-            )
-            # broker -- employed_by --> company
-            tx.run(
+            ),
+            elem,
+        )
+        # broker -- employed_by --> company
+        tx.execute_write(
+            lambda tx, elem: tx.run(
                 """
                 MATCH (b:Broker {broker_id: $broker_id})
                 MATCH (c:Company {company_id: $company_id})
                 MERGE (b)-[:employed_by]->(c)
                 """,
                 elem,
-            )
-            # broker -- manages (using agreement) --> property
-            tx.run(
+            ),
+            elem,
+        )
+        # broker -- manages (using agreement) --> property
+        tx.execute_write(
+            lambda tx, elem: tx.run(
                 """
                 MATCH (b:Broker {broker_id: $broker_id})
                 MATCH (p:Property {property_id: $property_id})
@@ -105,14 +113,15 @@ def init_db(tx):
                                     agreement_last_updated: CASE WHEN $agreement_last_updated IS NOT NULL THEN $agreement_last_updated END}
                 """,
                 elem,
-            )
-
-        tx.execute_write(store_elem, elem)
+            ),
+            elem,
+        )
 
 
 """
 inference
 """
+
 
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
@@ -121,10 +130,12 @@ session = driver.session(database="neo4j")
 
 # wipe = input("Reset database? (y/n): ")
 # wipe = True if wipe == "y" else False
-wipe = False
+wipe = True
 if wipe:
     session.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
     init_db(session)
+
+# create a temporary district node to 
 
 session.close()
 driver.close()
