@@ -182,12 +182,12 @@ for elem in tqdm(dicts):
         "links_type": "type",
         "description_price": "total_additional_costs",
     }
-    elem = {rename.get(k, k): v for k, v in elem.items()} # rename keys
-    elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()} # remove special chars
-    elem = {k.lower(): v for k, v in elem.items()} # lowercase keys
-    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()} # lowercase vals
-    elem = {k.translate(str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})): v for k, v in elem.items()} # replace umlaute
-    elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()} # round floats
+    elem = {rename.get(k, k): v for k, v in elem.items()}  # rename keys
+    elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}  # remove special chars
+    elem = {k.lower(): v for k, v in elem.items()}  # lowercase keys
+    elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}  # lowercase vals
+    elem = {k.translate(str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})): v for k, v in elem.items()}  # replace umlaute
+    elem = {k: round(v, 2) if isinstance(v, float) else v for k, v in elem.items()}  # round floats
 
     with open(outputpath, "a") as f:
         writer = csv.DictWriter(f, fieldnames=elem.keys(), quoting=csv.QUOTE_NONNUMERIC)
