@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def get_keys(file: str) -> list:
-    # get shared keys among all json objects in file
+    # get shared keys from all jsonl lines
     ks: set = set()
     file = open(file, "r").readlines()
     for line in file:
@@ -18,6 +18,14 @@ def get_keys(file: str) -> list:
     ks = list(ks)
     ks.sort()
     return ks
+
+
+def get_available_keys(dicts: list[dict], threshold: float) -> dict:
+    # get {key: non-null ratio} for all keys
+    available_keys = {k: sum([1 for j in dicts if j[k] is not None]) / len(dicts) for k in dicts[0].keys()}
+    available_keys = dict(sorted(available_keys.items(), key=lambda item: item[1], reverse=True))
+    available_keys = {k: v for k, v in available_keys.items() if v > threshold}
+    return available_keys
 
 
 def parse_float(string: str) -> float:
@@ -69,12 +77,16 @@ inputpath.sort()
 inputpath = inputpath[-1]
 outputpath = Path.cwd() / "data" / (str(Path(inputpath).stem) + ".csv")
 
-ks = get_keys(inputpath)
-file = open(inputpath, "r").readlines()
-for line in tqdm(file):
-    elem = json.loads(line)
-    elem = {key: elem.get(key) for key in ks}
+dicts = list(map(lambda line: json.loads(line), open(inputpath, "r").readlines()))
+required_keys = get_keys(inputpath)
+dicts = list(map(lambda elem: {key: elem.get(key) for key in required_keys}, dicts))  # use same keys in all jsonl lines
+assert all([set(dicts[0].keys()) == set(elem.keys()) for elem in dicts])
 
+threshold = 0.5  # only keep keys that are available in more than 50% of the data (good treshhold based on manual inspection)
+available_keys = get_available_keys(dicts, threshold)
+
+for elem in tqdm(dicts):
+    # preprocess
     elem["Ablöse"] = parse_float(elem["Ablöse"])
     elem["Balkon"] = parse_float(elem["Balkon"])
     elem["Betriebskosten (exkl. MWSt)"] = parse_float(elem["Betriebskosten (exkl. MWSt)"])
@@ -125,8 +137,21 @@ for line in tqdm(file):
     elem.pop("links_url")  # url
     elem.pop("links_num_rooms")  # zimmer
     elem.pop("links_seller_name")  # company_name
-    elem.pop("Preis")  # price
+    elem.pop("Preis")  # links_price
+    elem.pop("Monatliche Kosten (MWSt)")  # doesn't mean anything
 
+    # merge columns
+    if elem["Betriebskosten (exkl. MWSt)"] and not elem["Betriebskosten (inkl. MWSt)"]:
+        elem["Betriebskosten (inkl. MWSt)"] = elem["Betriebskosten (exkl. MWSt)"] * 1.2
+    elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
+    elem.pop("Betriebskosten (exkl. MWSt)")
+
+    # drop inavailable columns
+    for k in list(elem.keys()):
+        if k not in available_keys:
+            elem.pop(k)
+
+    # rename
     rename = {
         "links_address": "address",
         "links_price": "price",

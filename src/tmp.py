@@ -1,4 +1,3 @@
-import json
 import csv
 import glob
 from pathlib import Path
@@ -12,10 +11,6 @@ inputfile = list(csv.reader(open(inputpath, "r")))
 header = [word for word in inputfile[0]]
 body = inputfile[1:]
 
-# turn to jsons
-for row in body:
-    json_elem = dict(zip(header, row))
-    json_elem = {k.lower(): v.lower() for k, v in json_elem.items() if isinstance(k, str) and isinstance(v, str)}
-    json_elem = {k: (v if v != "" else None) for k, v in json_elem.items()}
-    print(json.dumps(json_elem, ensure_ascii=False, indent=4))
-    print()
+dicts = list(map(lambda row: dict(zip(header, row)), body))  # convert to dict
+dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.items()}, dicts))  # get null
+assert all([set(dicts[0].keys()) == set(elem.keys()) for elem in dicts])  # check if all dicts have the same keys
