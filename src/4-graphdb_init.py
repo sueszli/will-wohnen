@@ -137,36 +137,42 @@ def init_db(tx):
 inference
 """
 
-# property:
-#     ID: "url": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1200-brigittenau/-wow-die-perfe...",
-#     "links_price": "229000.0",
-#     "description_price": "5759.43", # any additional one-time costs
-#     "links_address": "1200",
-#     "bautyp": "altbau",
-#     "boeden": "parkett",
-#     "energy_certificate": "d",
-#     "heizung": "etagenheizung",
-#     "links_type": "balkon",
-#     "objekttyp": "wohnung",
-#     "stockwerke": "3",
-#     "verfuegbar": "2027",
-#     "wohnflaeche": "38.05",
-#     "zimmer": "2.0",
-#     "zustand": "renoviert"
-
-# company:
-#     ID: "company_reference_id": "267143",
-#     "company_url": "http://www.schantl-ith.at",
-#     "company_address": "messendorferstraße 71a8041 graz",
-#     "company_name": "schantl ith immobilientreuhand gmbh",
-
-# broker:
-#     ID: "company_broker_name": "magdalena tiatco-frank",
-
-# broker -- agreement --> property
-#     "last_update": "26.08.2024 12:00",
-#     "maklerprovision": "6870.0",
-
+# {
+#     "agreement_commission_fee": "101370.0",
+#     "agreement_last_updated": "23.08.2024 06:10",
+#     "broker_id": "georg mels-colloredo",
+#     "company_address": "tegetthoffstraße 71010 wien, 01. bezirk, innere stadt",
+#     "company_id": "19554",
+#     "company_name": "3si makler gmbh",
+#     "company_url": "https://www.3si.at",
+#     "property_availabilty": null,
+#     "property_balcony": "16.97",
+#     "property_building_type": "altbau",
+#     "property_completion": "2024",
+#     "property_condition": "erstbezug",
+#     "property_district": "1130",
+#     "property_energy_certificate": "d",
+#     "property_features": "terrasse, balkon, wintergarten, garten",
+#     "property_floor": "1",
+#     "property_flooring": "parkett",
+#     "property_garden": "112.44",
+#     "property_heating": "etagenheizung",
+#     "property_id": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1130-hietzing/zeitlose-eleganz-...",
+#     "property_living_area": "181.44",
+#     "property_loggia": null,
+#     "property_monthly_costs": "552.4",
+#     "property_other_costs": "87.0",
+#     "property_price": "3379000.0",
+#     "property_rooms": "4.5",
+#     "property_status": "in bau/planung",
+#     "property_terrace": "10.2",
+#     "property_top_number": "2",
+#     "property_total_area": null,
+#     "property_type": "wohnung",
+#     "property_units": "2",
+#     "property_usable_area": "341.96",
+#     "property_utilities": "1278.8"
+# }
 
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")

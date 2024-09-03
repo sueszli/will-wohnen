@@ -222,7 +222,7 @@ for elem in tqdm(dicts):
         "Zimmer": "property_rooms",
         "Zustand": "property_condition",
         "company_address": "company_address",
-        "company_broker_name": "broker_name",
+        "company_broker_name": "broker_id",
         "company_name": "company_name",
         "company_reference_id": "company_id",
         "company_url": "company_url",
@@ -232,7 +232,7 @@ for elem in tqdm(dicts):
         "links_address": "property_district",
         "links_price": "property_price",
         "links_type": "property_features",
-        "url": "property_url",
+        "url": "property_id",
     }
     elem = {rename_map[k]: v for k, v in elem.items()}
     elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}  # remove special chars
