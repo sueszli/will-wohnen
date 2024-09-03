@@ -7,8 +7,7 @@ services:
         FROM neo4j:latest
         RUN neo4j start
         RUN apt-get update && apt-get install -y python3 python3-pip
-        RUN pip3 install neo4j
-
+        RUN pip3 install requirements.txt
     environment:
       - NEO4J_AUTH=neo4j/password
     volumes:
