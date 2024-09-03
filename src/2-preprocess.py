@@ -71,7 +71,14 @@ def parse_commission_fee(string: str, kaufpreis: Optional[float] = None) -> Opti
 
 
 def get_embedding(text: str):
-    # nice to have feature: semantic similarity between real estate descriptions
+    """
+    one could use nlp models to semantically embed titles, descriptions, etc.
+
+    see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
+
+    > dks = ["description_additional", "description_equipment", "description_general", "description_location"]
+    > elem["description"] = get_embedding(". ".join([elem[key] if elem[key] is not None else ". " for key in dks]))
+    """
 
     import spacy
     import torch
@@ -82,7 +89,6 @@ def get_embedding(text: str):
     model = SentenceTransformer("T-Systems-onsite/german-roberta-sentence-transformer-v2", device=device)
     model.eval()
 
-    # for cosine sim, see: https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html
     sentences = nlp(text)
     sentences = [str(sent) for sent in sentences.sents]
     with torch.no_grad(), torch.amp.autocast(device_type=device, enabled=("cuda" in str(device))), torch.inference_mode():
@@ -152,6 +158,7 @@ for elem in tqdm(dicts):
     elem["links_num_rooms"] = parse_float(elem["links_num_rooms"])
     elem["links_price"] = parse_float(elem["links_price"])
 
+    # duplicate keys
     elem.pop("Kaufpreis")  # links_price is more structured
     elem.pop("address")  # links_address is structured
     elem.pop("links_m2")  # wohnfläche
@@ -161,25 +168,19 @@ for elem in tqdm(dicts):
     elem.pop("Preis")  # links_price
     elem.pop("Monatliche Kosten (MWSt)")  # doesn't mean anything
 
-    # drop inavailable keys
+    # unavailable keys
     for k in list(elem.keys()):
         if k not in available_keys:
             elem.pop(k)
 
-    # get embeddings
-    dks = ["description_additional", "description_equipment", "description_general", "description_location"]
-    elem["description"] = ". ".join([elem[key] if elem[key] is not None else ". " for key in dks])
-    for dk in dks:
-        elem.pop(dk)
+    # useless keys
+    elem.pop("description_additional")
+    elem.pop("description_equipment")
+    elem.pop("description_general")
+    elem.pop("description_location")
+    elem.pop("links_title")
+    elem.pop("title")
 
-    rename = {
-        "links_address": "address",
-        "links_price": "price",
-        "links_title": "title",
-        "links_type": "type",
-        "description_price": "total_additional_costs",
-    }
-    elem = {rename.get(k, k): v for k, v in elem.items()}  # rename keys
     elem = {k.replace(":", "").replace("(", "").replace(")", "").strip(): v for k, v in elem.items()}  # remove special chars
     elem = {k.lower(): v for k, v in elem.items()}  # lowercase keys
     elem = {k: v.lower() if isinstance(v, str) and not k.startswith("description_") else v for k, v in elem.items()}  # lowercase vals

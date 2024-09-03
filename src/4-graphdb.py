@@ -22,13 +22,6 @@ body = inputfile[1:]
 dicts = list(map(lambda row: dict(zip(header, row)), body))  # convert to dict
 dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.items()}, dicts))  # get null
 
-
-# property features (embeddings):
-#     "description_additional": "Stockwerk: 3. Etage / 3. LiftstockStiege: 1Kabel/Sat TVEnergiepass gültig bis: 2022-12-11Energiepass...",
-#     "description_equipment": "Balkonanzahl:1Balkonfläche:8,98 m²Bad mit DuscheBoden: FliesenbodenBoden: ParkettbodenHeizung: Etage...",
-#     "description_general": "Kaufen Sie heute diese wunderschöne Wohnung in 1200 Wien und Sie werden es nie bereuen! Diese Immobi...",
-#     "description_location": "Wallensteinplatz, Jägerstraße, Augarten, Donaukanalöffentliche Verkehrsanbindung: U4 und U6 // Straß...",
-
 # property features:
 #     "address": "1200 wien, 20. bezirk, brigittenau, jägerstraße",
 #     "bautyp": "altbau",
