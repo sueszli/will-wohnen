@@ -11,10 +11,6 @@ from tqdm import tqdm
 from graphdb_inference import *
 from utils import *
 
-"""
-initialization
-"""
-
 # {
 #     "agreement_commission_fee": "101370.0",
 #     "agreement_last_updated": "23.08.2024 06:10",
@@ -51,6 +47,11 @@ initialization
 #     "property_usable_area": "341.96",
 #     "property_utilities": "1278.8"
 # }
+
+
+"""
+initialization
+"""
 
 
 @timeit
@@ -136,21 +137,18 @@ graph data science
 main loop
 """
 
-reset = True
 uri = "bolt://main:7687"
 gds = GraphDataScience(uri)
-
 with GraphDatabase.driver(uri).session() as tx:
+    reset = False
     if reset:
         tx.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
-        print("reset database")
         init_db(tx)
-        print("initialized database")
+        print("reset and initialized database")
 
     """
     graph data science
     """
-
 
     """
     inference
