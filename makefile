@@ -32,7 +32,7 @@ docker-install:
 
 .PHONY: docker-build # save changes to container
 docker-build:
-	docker-compose build
+	docker-compose build --parallel
 
 .PHONY: docker-clean # wipe everything in docker
 docker-clean:

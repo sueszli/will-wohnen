@@ -119,6 +119,8 @@ fsspec==2024.6.1
     #   -r requirements.in
     #   huggingface-hub
     #   torch
+graphdatascience==1.11
+    # via -r requirements.in
 greenlet==3.0.3
     # via
     #   -r requirements.in
@@ -208,6 +210,10 @@ multidict==6.0.5
     #   -r requirements.in
     #   aiohttp
     #   yarl
+multimethod==1.12
+    # via
+    #   -r requirements.in
+    #   graphdatascience
 murmurhash==1.0.10
     # via
     #   -r requirements.in
@@ -215,7 +221,9 @@ murmurhash==1.0.10
     #   spacy
     #   thinc
 neo4j==5.24.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   graphdatascience
 nest-asyncio==1.6.0
     # via
     #   -r requirements.in
@@ -229,7 +237,10 @@ numpy==1.26.4
     #   -r requirements.in
     #   blis
     #   contourpy
+    #   graphdatascience
     #   matplotlib
+    #   pandas
+    #   pyarrow
     #   scikit-learn
     #   scipy
     #   sentence-transformers
@@ -246,6 +257,10 @@ packaging==24.1
     #   thinc
     #   transformers
     #   weasel
+pandas==2.2.2
+    # via
+    #   -r requirements.in
+    #   graphdatascience
 parso==0.8.4
     # via
     #   -r requirements.in
@@ -292,6 +307,10 @@ pure-eval==0.2.3
     # via
     #   -r requirements.in
     #   stack-data
+pyarrow==16.1.0
+    # via
+    #   -r requirements.in
+    #   graphdatascience
 pydantic==2.8.2
     # via
     #   -r requirements.in
@@ -325,10 +344,12 @@ python-dateutil==2.9.0.post0
     #   -r requirements.in
     #   jupyter-client
     #   matplotlib
+    #   pandas
 pytz==2024.1
     # via
     #   -r requirements.in
     #   neo4j
+    #   pandas
 pyyaml==6.0.2
     # via
     #   -r requirements.in
@@ -346,6 +367,7 @@ regex==2024.7.24
 requests==2.32.3
     # via
     #   -r requirements.in
+    #   graphdatascience
     #   huggingface-hub
     #   spacy
     #   transformers
@@ -417,6 +439,10 @@ sympy==1.13.2
     # via
     #   -r requirements.in
     #   torch
+textdistance==4.6.3
+    # via
+    #   -r requirements.in
+    #   graphdatascience
 thinc==8.2.5
     # via
     #   -r requirements.in
@@ -441,6 +467,7 @@ tornado==6.4.1
 tqdm==4.66.5
     # via
     #   -r requirements.in
+    #   graphdatascience
     #   huggingface-hub
     #   sentence-transformers
     #   spacy
@@ -466,6 +493,7 @@ typer==0.12.5
 typing-extensions==4.12.2
     # via
     #   -r requirements.in
+    #   graphdatascience
     #   huggingface-hub
     #   ipython
     #   pydantic
@@ -473,6 +501,10 @@ typing-extensions==4.12.2
     #   pyee
     #   torch
     #   typer
+tzdata==2024.1
+    # via
+    #   -r requirements.in
+    #   pandas
 urllib3==2.2.2
     # via
     #   -r requirements.in

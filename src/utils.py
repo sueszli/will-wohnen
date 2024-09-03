@@ -1,7 +1,9 @@
+import csv
 import functools
 import random
 import secrets
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -39,3 +41,11 @@ def get_device(disable_mps=False) -> str:
         return "cuda"
     else:
         return "cpu"
+
+
+def dump_to_csv(filepath: Path, data: list[dict]) -> None:
+    filepath.unlink(missing_ok=True)
+    with open(filepath, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=data[0].keys(), quoting=csv.QUOTE_NONNUMERIC)
+        writer.writeheader()
+        writer.writerows(data)
