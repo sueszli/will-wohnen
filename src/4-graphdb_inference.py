@@ -1,5 +1,6 @@
 import csv
 import glob
+import shutil
 from glob import glob
 from pathlib import Path
 
@@ -247,6 +248,22 @@ def get_broker_collaboration_network(tx, max_depth=3):
     return [record["collaboration_chain"] for record in result]
 
 
+def get_broker_performance_ranking(tx):
+    # [{broker: str, total_commission: float, properties_managed: int, avg_commission_per_property: float}]
+    result = tx.run(
+        """
+        MATCH (b:Broker)-[m:manages]->(p:Property)
+        WHERE p.property_price IS NOT NULL AND m.agreement_commission_fee IS NOT NULL
+        WITH b, SUM(toFloat(p.property_price) * toFloat(m.agreement_commission_fee) / 100) AS total_commission,
+            COUNT(p) AS properties_managed
+        RETURN b.broker_id AS broker, total_commission, properties_managed,
+            total_commission / properties_managed AS avg_commission_per_property
+        ORDER BY total_commission DESC
+        """
+    )
+    return [{"broker": record["broker"], "total_commission": record["total_commission"], "properties_managed": record["properties_managed"], "avg_commission_per_property": record["avg_commission_per_property"]} for record in result]
+
+
 def get_property_chain_ownership(tx, max_depth=3):
     # where a company owns a property that is managed by a broker who manages another property owned by a different company --> no chains found
     result = tx.run(
@@ -285,6 +302,30 @@ def get_company_broker_utilization(tx):
     return [{"company": record["company"], "broker_count": record["broker_count"], "property_count": record["property_count"], "efficiency_ratio": record["efficiency_ratio"]} for record in result]
 
 
+def get_district_price_feature_influence(tx):
+    # [{district: str, avg_price: float, top_features: [(feature: str, count: int)]}]
+    result = tx.run(
+        """
+        MATCH (p:Property)
+        WHERE p.property_price IS NOT NULL AND p.property_district IS NOT NULL
+        WITH p.property_district AS district, AVG(toFloat(p.property_price)) AS avg_price,
+            COLLECT(p.property_features) AS all_features
+        UNWIND split(reduce(s = '', f IN all_features | s + ', ' + coalesce(f, '')), ', ') AS feature
+        WITH district, avg_price, feature
+        WHERE feature <> ''
+        WITH district, avg_price, feature, COUNT(*) AS feature_count
+        ORDER BY avg_price DESC, feature_count DESC
+        WITH district, avg_price, COLLECT({feature: feature, count: feature_count})[..5] AS top_features
+        RETURN district, avg_price, top_features
+        ORDER BY avg_price DESC
+        """
+    )
+    result = [{"district": record["district"], "avg_price": record["avg_price"], "top_features": record["top_features"]} for record in result]
+    for record in result:
+        record["top_features"] = [(elem["feature"], elem["count"]) for elem in record["top_features"]]
+    return result
+
+
 reset = False
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
@@ -296,7 +337,17 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         print("initialized database")
 
     outpath_base = Path.cwd() / "data" / "inference"
+    shutil.rmtree(outpath_base, ignore_errors=True)
     outpath_base.mkdir(parents=True, exist_ok=True)
+
+    # > which districts have the highest average property prices and which features are most common in these districts?
+    # filename = outpath_base / "district_price_feature_influence.csv"
+    # res = tx.execute_read(get_district_price_feature_influence)
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
 
     # # > which companies have most properties in vienna?
     # filename = outpath_base / "company_city_market_share.csv"
@@ -345,7 +396,7 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
     #     writer.writeheader()
     #     writer.writerows(res)
 
-    # > which brokers have the most valuable properties?
+    # # > which brokers have the most valuable properties?
     # res = tx.execute_read(get_broker_property_net_worth)
     # filename = outpath_base / "broker_property_net_worth.csv"
     # filename.unlink(missing_ok=True)
@@ -354,7 +405,16 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
     #     writer.writeheader()
     #     writer.writerows(res)
 
-    # > which companies utilize their brokers most efficiently?
+    # # > which brokers make the most commission and have the most properties?
+    # res = tx.execute_read(get_broker_performance_ranking)
+    # filename = outpath_base / "broker_performance_ranking.csv"
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
+
+    # # > which companies utilize their brokers most efficiently?
     # res = tx.execute_read(get_company_broker_utilization)
     # filename = outpath_base / "company_broker_utilization.csv"
     # filename.unlink(missing_ok=True)
