@@ -1,3 +1,6 @@
+import functools
+import itertools
+import os
 import csv
 import glob
 from glob import glob
@@ -118,6 +121,7 @@ def init_db(tx):
 
 
 def get_company_city_market_share(tx):
+    # [company: str, share: float]
     result = tx.run(
         """
         MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
@@ -133,6 +137,7 @@ def get_company_city_market_share(tx):
 
 
 def get_company_district_share(tx):
+    # [{district: str, shares: [{company: str, share: float}]}]
     result = tx.run(
         """
         MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
@@ -151,6 +156,7 @@ def get_company_district_share(tx):
 
 
 def get_company_net_worth(tx):
+    # [{company: str, net_worth: float}]
     result = tx.run(
         """
         MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
@@ -167,6 +173,7 @@ def get_company_net_worth(tx):
 
 
 def get_broker_city_market_share(tx):
+    # [{broker: str, share: float}]
     result = tx.run(
         """
         MATCH (b:Broker)-[:manages]->(p:Property)
@@ -182,6 +189,7 @@ def get_broker_city_market_share(tx):
 
 
 def get_broker_company_share(tx):
+    # [{company: str, shares: [{broker: str, share: float}]}]
     result = tx.run(
         """
         MATCH (c:Company)-[:employs]->(b:Broker)-[:manages]->(p:Property)
@@ -209,53 +217,54 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
         init_db(tx)
         print("initialized database")
 
+    outpath_base = Path.cwd() / "data-inference"
+
     # > which companies have most properties in vienna?
-    # res = tx.read_transaction(get_company_city_market_share)
-    # k = 10
-    # print(f"top {k} companies by city market share")
-    # for elem in res[:k]:
-    #     print(f"\t{elem}")
+    filename = outpath_base / "company_city_market_share.csv"
+    res = tx.read_transaction(get_company_city_market_share)
+    filename.unlink(missing_ok=True)
+    with open(filename, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
 
     # > which companies have most properties in each district?
-    # res = tx.read_transaction(get_company_district_share)
-    # k = 10
-    # print(f"top {k} companies by district market share")
-    # GREEN = "\033[92m"
-    # END = "\033[0m"
-    # for elem in res:
-    #     print(f"\tdistrict: {elem['district']}")
-    #     for cp in elem["shares"][:k]:
-    #         cname = cp["company"]
-    #         share = cp["share"]
-    #         if share >= 0.01:
-    #             cname = f"{GREEN}{cname}{END}"
-    #         print(f"\t\t{cname}: {share}")
+    res = tx.read_transaction(get_company_district_share)
+    filename = outpath_base / "company_district_share.csv"
+    filename.unlink(missing_ok=True)
+    res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"district": elem["district"], **x}, elem["shares"])), res)))
+    with open(filename, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
 
     # > which brokers have most properties in vienna?
-    # res = tx.read_transaction(get_broker_city_market_share)
-    # k = 10
-    # print(f"top {k} brokers by city market share")
-    # for elem in res[:k]:
-    #     print(f"\t{elem}")
+    res = tx.read_transaction(get_broker_city_market_share)
+    filename = outpath_base / "broker_city_market_share.csv"
+    filename.unlink(missing_ok=True)
+    with open(filename, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
 
     # > which brokers have most properties per company?
-    # res = tx.read_transaction(get_broker_company_share)
-    # k = 5
-    # print(f"top {k} brokers by company")
-    # GREEN = "\033[92m"
-    # END = "\033[0m"
-    # for elem in res:
-    #     cname = elem["company"]
-    #     print(f"\tcompany: {cname}")
-    #     for cp in elem["shares"][:k]:
-    #         bname = cp["broker"]
-    #         share = cp["share"]
-    #         if share >= 0.5:
-    #             bname = f"{GREEN}{bname}{END}"
-    #         print(f"\t\t{bname}: {share}")
+    res = tx.read_transaction(get_broker_company_share)
+    filename = outpath_base / "broker_company_share.csv"
+    filename.unlink(missing_ok=True)
+    res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"company": elem["company"], **x}, elem["shares"])), res)))
+    with open(filename, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
 
     # > which companies have most money in properties?
-    # res = tx.read_transaction(get_company_net_worth)
+    res = tx.read_transaction(get_company_net_worth)
+    filename = outpath_base / "company_net_worth.csv"
+    filename.unlink(missing_ok=True)
+    with open(filename, "w") as f:
+        writer = csv.DictWriter(f, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
     # k = 10
     # print(f"top {k} companies by net worth")
     # for elem in res[:k]:
