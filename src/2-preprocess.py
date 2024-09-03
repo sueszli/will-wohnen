@@ -171,7 +171,7 @@ for elem in tqdm(dicts):
 
     # store
     with open(outputpath, "a") as f:
-        writer = csv.DictWriter(f, fieldnames=elem.keys())
+        writer = csv.DictWriter(f, fieldnames=elem.keys(), quoting=csv.QUOTE_NONNUMERIC)
         if f.tell() == 0:
             writer.writeheader()
         writer.writerow(elem)
