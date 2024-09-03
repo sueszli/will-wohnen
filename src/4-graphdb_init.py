@@ -118,35 +118,60 @@ def init_db(tx):
         )
 
 
+# def get_district_shares(tx):
+#     result = tx.run("""
+#     MATCH (p:Property)
+#     WHERE p.property_district IS NOT NULL
+#     WITH DISTINCT p.property_district AS district
+#     WITH collect(district) AS districts
+
+#     UNWIND districts AS district
+#     MATCH (c:Company)-[:employed_by]-(b:Broker)-[:manages]->(p:Property {property_district: district})
+#     WITH district, count(DISTINCT c) AS company_count
+
+#     WITH collect({district: district, count: company_count}) AS district_counts,
+#          sum(company_count) AS total_companies
+
+#     UNWIND district_counts AS dc
+#     RETURN dc.district AS district,
+#            (toFloat(dc.count) / total_companies * 100) AS company_share_percentage
+#     ORDER BY company_share_percentage DESC
+#     """)
+    
+#     district_shares = [{"district": record["district"], "company_share_percentage": record["company_share_percentage"]} for record in result]
+#     district_shares.sort(key=lambda x: x["company_share_percentage"], reverse=True)
+#     return district_shares
+
 def get_district_shares(tx):
-    result = tx.run(
-        """
-        MATCH (p:Property)
-        WITH DISTINCT p.property_district AS district
-        WHERE district IS NOT NULL
-        RETURN district
-        """
-    )
-    districts = [record['district'] for record in result]
+    result = tx.run("MATCH (p:Property) RETURN DISTINCT p.property_district AS district")
+    districts = [record["district"] for record in result]
 
-    # for each district, get all companies
-    # for each company, get all shares in that district as a percentage
+    district_shares = [] # {district: <district>, [company: <company>, percentage: <percentage>]}
+    for district in districts:
+        result = tx.run(
+            """
+            MATCH (c:Company)-[:employed_by]-(:Broker)-[:manages]->(p:Property {property_district: $district})
+            WITH c.company_name AS company, COUNT(p) AS company_properties
+            WITH company, company_properties, 
+                toFloat(company_properties) / toFloat(CASE WHEN $total_properties > 0 THEN $total_properties ELSE 1 END) * 100 AS percentage
+            ORDER BY percentage DESC
+            RETURN {company: company, district: $district, percentage: toFloat(ROUND(100 * percentage) / 100)} AS share
+            """,
+            district=district, total_properties=tx.run(f"MATCH (p:Property {{property_district: '{district}'}}) RETURN COUNT(p) AS count").single()["count"]
+        )
+        
+        district_shares.extend([record["share"] for record in result])
 
-"""
-inference
-"""
-
+    return district_shares
 
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
-driver = GraphDatabase.driver(uri, auth=auth)
-
-with driver.session() as tx:
+with GraphDatabase.driver(uri, auth=auth).session() as tx:
     reset = False
     if reset:
-        tx.write_transaction(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
-    
-    res = tx.read_transaction(get_district_shares)
-    print(res)
+        tx.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
 
-driver.close()
+    res = tx.execute_read(get_district_shares)
+    for r in res:
+        print(r)
+    # print(res)
