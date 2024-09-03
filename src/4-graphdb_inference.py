@@ -1,6 +1,3 @@
-import functools
-import itertools
-import os
 import csv
 import glob
 from glob import glob
@@ -45,6 +42,11 @@ from tqdm import tqdm
 #     "property_usable_area": "341.96",
 #     "property_utilities": "1278.8"
 # }
+
+
+"""
+initialization
+"""
 
 
 def init_db(tx):
@@ -118,6 +120,11 @@ def init_db(tx):
             ),
             elem,
         )
+
+
+"""
+queries
+"""
 
 
 def get_company_city_market_share(tx):
@@ -207,6 +214,77 @@ def get_broker_company_share(tx):
     return [record["result"] for record in result]
 
 
+def get_broker_property_net_worth(tx):
+    # [{broker: str, total_value: float}]
+    result = tx.run(
+        """
+        MATCH (b:Broker)-[:manages]->(p:Property)
+        WHERE p.property_price IS NOT NULL
+        WITH b, SUM(toFloat(p.property_price)) AS total_value
+        ORDER BY total_value DESC
+        RETURN b.broker_id AS broker, total_value
+        """
+    )
+    return [{"broker": record["broker"], "total_value": record["total_value"]} for record in result]
+
+
+def get_broker_collaboration_network(tx, max_depth=3):
+    # idea: brokers who have collaborated on managing properties, forming a network of professional relationships --> no chains found
+    result = tx.run(
+        """
+        MATCH path = (b1:Broker)-[:manages]->(:Property)<-[:manages]-(b2:Broker)
+        WHERE b1 <> b2
+        WITH path, length(path) AS path_length
+        WHERE path_length <= $max_depth
+        RETURN [node IN nodes(path) | 
+                CASE 
+                    WHEN node:Broker THEN node.broker_id
+                    WHEN node:Property THEN node.property_id
+                END] AS collaboration_chain
+        """,
+        max_depth=max_depth,
+    )
+    return [record["collaboration_chain"] for record in result]
+
+
+def get_property_chain_ownership(tx, max_depth=3):
+    # where a company owns a property that is managed by a broker who manages another property owned by a different company --> no chains found
+    result = tx.run(
+        """
+        MATCH path = (c1:Company)-[:employs]->(:Broker)-[:manages]->(p1:Property)
+        -[:manages]-(:Broker)<-[:employs]-(c2:Company)
+        WHERE c1 <> c2
+        WITH path, length(path) AS path_length
+        WHERE path_length <= $max_depth
+        RETURN [node IN nodes(path) | 
+                CASE 
+                    WHEN node:Company THEN node.company_name 
+                    WHEN node:Broker THEN node.broker_id
+                    WHEN node:Property THEN node.property_id
+                END] AS chain
+        """,
+        max_depth=max_depth,
+    )
+    return [record["chain"] for record in result]
+
+
+def get_company_broker_utilization(tx):
+    # [company: str, broker_count: int, property_count: int, efficiency_ratio: float]
+    # companies with the highest ratio of properties managed per broker employed
+    result = tx.run(
+        """
+        MATCH (c:Company)-[:employs]->(b:Broker)-[:manages]->(p:Property)
+        WITH c, COUNT(DISTINCT b) AS broker_count, COUNT(DISTINCT p) AS property_count
+        RETURN c.company_name AS company, 
+               broker_count, 
+               property_count,
+               toFloat(property_count) / broker_count AS efficiency_ratio
+        ORDER BY efficiency_ratio DESC
+        """
+    )
+    return [{"company": record["company"], "broker_count": record["broker_count"], "property_count": record["property_count"], "efficiency_ratio": record["efficiency_ratio"]} for record in result]
+
+
 reset = False
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
@@ -220,49 +298,67 @@ with GraphDatabase.driver(uri, auth=auth).session() as tx:
     outpath_base = Path.cwd() / "data" / "inference"
     outpath_base.mkdir(parents=True, exist_ok=True)
 
-    # > which companies have most properties in vienna?
-    filename = outpath_base / "company_city_market_share.csv"
-    res = tx.execute_read(get_company_city_market_share)
-    filename.unlink(missing_ok=True)
-    with open(filename, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=res[0].keys())
-        writer.writeheader()
-        writer.writerows(res)
+    # # > which companies have most properties in vienna?
+    # filename = outpath_base / "company_city_market_share.csv"
+    # res = tx.execute_read(get_company_city_market_share)
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
 
-    # > which companies have most properties in each district?
-    res = tx.execute_read(get_company_district_share)
-    filename = outpath_base / "company_district_share.csv"
-    filename.unlink(missing_ok=True)
-    res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"district": elem["district"], **x}, elem["shares"])), res)))
-    with open(filename, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=res[0].keys())
-        writer.writeheader()
-        writer.writerows(res)
+    # # > which companies have most properties in each district?
+    # res = tx.execute_read(get_company_district_share)
+    # filename = outpath_base / "company_district_share.csv"
+    # filename.unlink(missing_ok=True)
+    # res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"district": elem["district"], **x}, elem["shares"])), res)))
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
 
-    # > which brokers have most properties in vienna?
-    res = tx.execute_read(get_broker_city_market_share)
-    filename = outpath_base / "broker_city_market_share.csv"
-    filename.unlink(missing_ok=True)
-    with open(filename, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=res[0].keys())
-        writer.writeheader()
-        writer.writerows(res)
+    # # > which companies have most money in properties?
+    # res = tx.execute_read(get_company_net_worth)
+    # filename = outpath_base / "company_net_worth.csv"
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
 
-    # > which brokers have most properties per company?
-    res = tx.execute_read(get_broker_company_share)
-    filename = outpath_base / "broker_company_share.csv"
-    filename.unlink(missing_ok=True)
-    res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"company": elem["company"], **x}, elem["shares"])), res)))
-    with open(filename, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=res[0].keys())
-        writer.writeheader()
-        writer.writerows(res)
+    # # > which brokers have most properties in vienna?
+    # res = tx.execute_read(get_broker_city_market_share)
+    # filename = outpath_base / "broker_city_market_share.csv"
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
 
-    # > which companies have most money in properties?
-    res = tx.execute_read(get_company_net_worth)
-    filename = outpath_base / "company_net_worth.csv"
-    filename.unlink(missing_ok=True)
-    with open(filename, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=res[0].keys())
-        writer.writeheader()
-        writer.writerows(res)
+    # # > which brokers have most properties per company?
+    # res = tx.execute_read(get_broker_company_share)
+    # filename = outpath_base / "broker_company_share.csv"
+    # filename.unlink(missing_ok=True)
+    # res = list(itertools.chain(*map(lambda elem: list(map(lambda x: {"company": elem["company"], **x}, elem["shares"])), res)))
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
+
+    # > which brokers have the most valuable properties?
+    # res = tx.execute_read(get_broker_property_net_worth)
+    # filename = outpath_base / "broker_property_net_worth.csv"
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
+
+    # > which companies utilize their brokers most efficiently?
+    # res = tx.execute_read(get_company_broker_utilization)
+    # filename = outpath_base / "company_broker_utilization.csv"
+    # filename.unlink(missing_ok=True)
+    # with open(filename, "w") as f:
+    #     writer = csv.DictWriter(f, fieldnames=res[0].keys())
+    #     writer.writeheader()
+    #     writer.writerows(res)
