@@ -118,6 +118,20 @@ def init_db(tx):
         )
 
 
+def get_district_shares(tx):
+    result = tx.run(
+        """
+        MATCH (p:Property)
+        WITH DISTINCT p.property_district AS district
+        WHERE district IS NOT NULL
+        RETURN district
+        """
+    )
+    districts = [record['district'] for record in result]
+
+    # for each district, get all companies
+    # for each company, get all shares in that district as a percentage
+
 """
 inference
 """
@@ -126,16 +140,13 @@ inference
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
 driver = GraphDatabase.driver(uri, auth=auth)
-session = driver.session(database="neo4j")
 
-# wipe = input("Reset database? (y/n): ")
-# wipe = True if wipe == "y" else False
-wipe = True
-if wipe:
-    session.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
-    init_db(session)
+with driver.session() as tx:
+    reset = False
+    if reset:
+        tx.write_transaction(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
+    
+    res = tx.read_transaction(get_district_shares)
+    print(res)
 
-# create a temporary district node to 
-
-session.close()
 driver.close()
