@@ -6,47 +6,11 @@ from pathlib import Path
 
 from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase
+from neo4j.exceptions import ClientError
 from tqdm import tqdm
 
 from graphdb_inference import *
 from utils import *
-
-# {
-#     "agreement_commission_fee": "101370.0",
-#     "agreement_last_updated": "23.08.2024 06:10",
-#     "broker_id": "georg mels-colloredo",
-#     "company_address": "tegetthoffstraße 71010 wien, 01. bezirk, innere stadt",
-#     "company_id": "19554",
-#     "company_name": "3si makler gmbh",
-#     "company_url": "https://www.3si.at",
-#     "property_availabilty": null,
-#     "property_balcony": "16.97",
-#     "property_building_type": "altbau",
-#     "property_completion": "2024",
-#     "property_condition": "erstbezug",
-#     "property_district": "1130",
-#     "property_energy_certificate": "d",
-#     "property_features": "terrasse, balkon, wintergarten, garten",
-#     "property_floor": "1",
-#     "property_flooring": "parkett",
-#     "property_garden": "112.44",
-#     "property_heating": "etagenheizung",
-#     "property_id": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1130-hietzing/zeitlose-eleganz-...",
-#     "property_living_area": "181.44",
-#     "property_loggia": null,
-#     "property_monthly_costs": "552.4",
-#     "property_other_costs": "87.0",
-#     "property_price": "3379000.0",
-#     "property_rooms": "4.5",
-#     "property_status": "in bau/planung",
-#     "property_terrace": "10.2",
-#     "property_top_number": "2",
-#     "property_total_area": null,
-#     "property_type": "wohnung",
-#     "property_units": "2",
-#     "property_usable_area": "341.96",
-#     "property_utilities": "1278.8"
-# }
 
 
 """
@@ -129,11 +93,6 @@ def init_db(tx):
 
 
 """
-graph data science
-"""
-
-
-"""
 main loop
 """
 
@@ -149,6 +108,13 @@ with GraphDatabase.driver(uri).session() as tx:
     """
     graph data science
     """
+
+    try:
+        gds.graph.drop("gds-graph")
+    except ClientError:
+        pass
+    G, result = gds.graph.project("gds-graph", ["Company", "Broker", "Property"], ["employs", "manages"])
+    print(f"projected: {result['nodeCount']} nodes, {result['relationshipCount']} edges")
 
     """
     inference
