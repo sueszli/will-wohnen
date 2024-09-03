@@ -2,6 +2,7 @@ import csv
 import glob
 from glob import glob
 from pathlib import Path
+from utils import timeit
 
 from neo4j import GraphDatabase
 from tqdm import tqdm
@@ -58,22 +59,22 @@ def init_db(tx):
     dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.items()}, dicts))  # get null
 
     for elem in tqdm(dicts):
-        # broker
-        tx.execute_write(
-            lambda tx, elem: tx.run(
-                """
-                MERGE (b:Broker {broker_id: $broker_id})
-                """,
-                elem,
-            ),
-            elem,
-        )
         # company
         tx.execute_write(
             lambda tx, elem: tx.run(
                 """
                 MERGE (c:Company {company_id: $company_id})
                 ON CREATE SET c.company_address = $company_address, c.company_name = $company_name, c.company_url = $company_url
+                """,
+                elem,
+            ),
+            elem,
+        )
+        # broker
+        tx.execute_write(
+            lambda tx, elem: tx.run(
+                """
+                MERGE (b:Broker {broker_id: $broker_id})
                 """,
                 elem,
             ),
@@ -90,13 +91,13 @@ def init_db(tx):
             ),
             elem,
         )
-        # broker -- employed_by --> company
+        # company -- employs --> broker
         tx.execute_write(
             lambda tx, elem: tx.run(
                 """
-                MATCH (b:Broker {broker_id: $broker_id})
                 MATCH (c:Company {company_id: $company_id})
-                MERGE (b)-[:employed_by]->(c)
+                MATCH (b:Broker {broker_id: $broker_id})
+                MERGE (c)-[r:employs]->(b)
                 """,
                 elem,
             ),
@@ -118,60 +119,66 @@ def init_db(tx):
         )
 
 
-# def get_district_shares(tx):
-#     result = tx.run("""
-#     MATCH (p:Property)
-#     WHERE p.property_district IS NOT NULL
-#     WITH DISTINCT p.property_district AS district
-#     WITH collect(district) AS districts
+def get_company_city_market_share(tx):
+    result = tx.run(
+        """
+        MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
+        WITH c.company_name AS company, COUNT(DISTINCT p) AS property_count
+        WITH COLLECT({company: company, count: property_count}) AS company_counts
+        WITH company_counts, REDUCE(total = 0, count IN company_counts | total + count.count) AS total_properties
+        UNWIND company_counts AS company_data
+        RETURN company_data.company AS company, toFloat(company_data.count) / total_properties AS share
+        ORDER BY share DESC
+        """
+    )
+    return [
+        {"company": record["company"], "share": record["share"]}
+        for record in result
+    ]
 
-#     UNWIND districts AS district
-#     MATCH (c:Company)-[:employed_by]-(b:Broker)-[:manages]->(p:Property {property_district: district})
-#     WITH district, count(DISTINCT c) AS company_count
+def get_company_district_share(tx):
+    result = tx.run(
+        """
+        MATCH (c:Company)-[:employs]->(:Broker)-[:manages]->(p:Property)
+        WITH p.property_district AS district, c.company_name AS company, COUNT(DISTINCT p) AS property_count
+        WITH district, COLLECT({company: company, count: property_count}) AS company_counts
+        WITH district, company_counts, REDUCE(total = 0, count IN company_counts | total + count.count) AS total_properties
+        UNWIND company_counts AS company_data
+        WITH district, company_data.company AS company, toFloat(company_data.count) / total_properties AS share
+        ORDER BY district, share DESC
+        WITH district, COLLECT({company: company, share: share}) AS shares
+        RETURN {district: district, shares: shares} AS result
+        ORDER BY district
+        """
+    )
+    return [record["result"] for record in result]
 
-#     WITH collect({district: district, count: company_count}) AS district_counts,
-#          sum(company_count) AS total_companies
-
-#     UNWIND district_counts AS dc
-#     RETURN dc.district AS district,
-#            (toFloat(dc.count) / total_companies * 100) AS company_share_percentage
-#     ORDER BY company_share_percentage DESC
-#     """)
-    
-#     district_shares = [{"district": record["district"], "company_share_percentage": record["company_share_percentage"]} for record in result]
-#     district_shares.sort(key=lambda x: x["company_share_percentage"], reverse=True)
-#     return district_shares
-
-def get_district_shares(tx):
-    result = tx.run("MATCH (p:Property) RETURN DISTINCT p.property_district AS district")
-    districts = [record["district"] for record in result]
-
-    district_shares = [] # {district: <district>, [company: <company>, percentage: <percentage>]}
-    for district in districts:
-        result = tx.run(
-            """
-            MATCH (c:Company)-[:employed_by]-(:Broker)-[:manages]->(p:Property {property_district: $district})
-            WITH c.company_name AS company, COUNT(p) AS company_properties
-            WITH company, company_properties, 
-                toFloat(company_properties) / toFloat(CASE WHEN $total_properties > 0 THEN $total_properties ELSE 1 END) * 100 AS percentage
-            ORDER BY percentage DESC
-            RETURN {company: company, district: $district, percentage: toFloat(ROUND(100 * percentage) / 100)} AS share
-            """,
-            district=district, total_properties=tx.run(f"MATCH (p:Property {{property_district: '{district}'}}) RETURN COUNT(p) AS count").single()["count"]
-        )
-        
-        district_shares.extend([record["share"] for record in result])
-
-    return district_shares
-
+reset = False
 uri = "bolt://main:7687"
 auth = ("neo4j", "password")
 with GraphDatabase.driver(uri, auth=auth).session() as tx:
-    reset = False
     if reset:
         tx.execute_write(lambda tx: tx.run("MATCH (n) DETACH DELETE n"))
+        print("reset database")
+        init_db(tx)
+        print("initialized database")
 
-    res = tx.execute_read(get_district_shares)
-    for r in res:
-        print(r)
-    # print(res)
+    # res = tx.read_transaction(get_company_city_market_share)
+    # k = 10
+    # print(f"top {k} companies by city market share")
+    # for elem in res[:k]:
+    #     print(f"\t{elem}")
+
+    res = tx.read_transaction(get_company_district_share)
+    k = 10
+    print(f"top {k} companies by district market share")
+    GREEN = "\033[92m"
+    END = "\033[0m"
+    for elem in res:
+        print(f"\tdistrict: {elem['district']}")
+        for cp in elem["shares"][:k]:
+            cname = cp["company"]
+            share = cp["share"]
+            if share >= 0.01:
+                cname = f"{GREEN}{cname}{END}"
+            print(f"\t\t{cname}: {share}")
