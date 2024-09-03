@@ -163,12 +163,6 @@ for elem in tqdm(dicts):
         if k not in available_keys:
             elem.pop(k)
 
-    # merge keys
-    if elem["Betriebskosten (exkl. MWSt)"] and not elem["Betriebskosten (inkl. MWSt)"]:
-        elem["Betriebskosten (inkl. MWSt)"] = elem["Betriebskosten (exkl. MWSt)"] * 1.2
-    elem["betriebskosten"] = elem.pop("Betriebskosten (inkl. MWSt)")
-    elem.pop("Betriebskosten (exkl. MWSt)")
-
     # get embeddings
     dks = [k for k in elem.keys() if k.startswith("description_")]
     elem["description_embedding"] = get_embedding(". ".join([elem[key] if elem[key] is not None else "" for key in dks]))
