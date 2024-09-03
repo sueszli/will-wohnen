@@ -22,23 +22,23 @@ body = inputfile[1:]
 dicts = list(map(lambda row: dict(zip(header, row)), body))  # convert to dict
 dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.items()}, dicts))  # get null
 
+
 # property features:
-#     "address": "1200 wien, 20. bezirk, brigittenau, jägerstraße",
+#     "links_price": "229000.0",
+#     "description_price": "5759.43", # any additional one-time costs
+#     "links_address": "1200 wien, 20. bezirk, brigittenau, jägerstraße",
 #     "bautyp": "altbau",
 #     "boeden": "parkett",
 #     "energy_certificate": "d",
-#     "price": "229000.0",
-#     "url": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1200-brigittenau/-wow-die-perfe...",
+#     "heizung": "etagenheizung",
+#     "links_type": "balkon",
 #     "objekttyp": "wohnung",
 #     "stockwerke": "3",
-#     "title": "++ wow ++ die perfekte stadtwohnung + aufwendige sanierung + balkon im innenhof + inkl. küche",
-#     "total_additional_costs": "5759.43",
-#     "type": "balkon",
+#     "url": "https://www.willhaben.at/iad/immobilien/d/eigentumswohnung/wien/wien-1200-brigittenau/-wow-die-perfe...",
 #     "verfuegbar": "2027",
 #     "wohnflaeche": "38.05",
 #     "zimmer": "2.0",
 #     "zustand": "renoviert"
-#     "heizung": "etagenheizung",
 
 # company features:
 #     "company_address": "messendorferstraße 71a8041 graz",
@@ -48,7 +48,6 @@ dicts = list(map(lambda elem: {k: (v if v != "" else None) for k, v in elem.item
 
 # broker:
 #     "company_broker_name": "magdalena tiatco-frank",
-
 
 # agreement:
 #     "last_update": "26.08.2024 12:00",
