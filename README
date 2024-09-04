@@ -1,11 +1,17 @@
                              ~~~~
                             ~~
-                          _||____
+                          _||____             proof of concept:
  /\ /\ /\                /\\\\\\\\            
-//\\/\\/\\        __    /__\\\\\\\\  _,       real estate investment analysis
-//\\/\\/\\     __/  \_  |__|_|_|__|   \__,    using neo4j knowledge graphs
+//\\/\\/\\        __    /__\\\\\\\\  _,       real estate investment platform
+//\\/\\/\\     __/  \_  |__|_|_|__|   \__,    built with neo4j knowledge graphs
  || || ||     '-o---o-' |  |/|\| /|   /\ \
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+gain a competitive edge in real estate trading with data-driven insights.
+
+- full fledged parallelized willhaben scraper
+- neo4j market graph database
+- neo4j data science library for embeddings and graph machine learning
 
 usage:
 

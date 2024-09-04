@@ -2,8 +2,8 @@
 documentclass: article
 papersize: a4
 title:  "Will Wohnen"
-subtitle: "SS24, 192.116 Knowledge Graphs @ TU Wien"
-author: Yahya Jabary
+subtitle: "SS24, 192.116 Knowledge Graphs @ TU Wien | Yahya Jabary (11912007)"
+author: "`https://github.com/sueszli/will-wohnen/`"
 # classoption:
 #     - twocolumn
 fontsize: 11pt
@@ -19,6 +19,10 @@ geometry:
 for config see: https://pandoc.org/chunkedhtml-demo/6.2-variables.html
 
 $ pandoc report.md -o report.pdf && open report.pdf
+
+merge pdfs:
+
+$ rm -rf output.pdf && gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=output.pdf report-header.pdf report.pdf
 
 -->
 
