@@ -1,4 +1,3 @@
-```
                              ~~~~
                             ~~
                           _||____
@@ -7,4 +6,11 @@
 //\\/\\/\\     __/  \_  |__|_|_|__|   \__,    using neo4j knowledge graphs
  || || ||     '-o---o-' |  |/|\| /|   /\ \
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+usage:
+
+```
+tar -xzf data.tar.gz -C .
+docker-compose up -d
+docker exec -it main /bin/bash
 ```
