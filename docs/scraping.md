@@ -1,5 +1,3 @@
-alternative recommended tool: https://chromewebstore.google.com/detail/multi-find-search-and-hig/dffaiikpbncahnghlfnkhagffaemhgfo
-
 # choosing a website
 
 traffic estimated with: https://ahrefs.com/traffic-checker
