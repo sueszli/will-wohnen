@@ -18,5 +18,5 @@ usage:
 ```
 tar -xzf data.tar.gz -C .
 docker-compose up -d
-docker exec -it main /bin/bash
+docker exec -it main bash
 ```
