@@ -1,17 +1,19 @@
                              ~~~~
                             ~~
                           _||____             
- /\ /\ /\                /\\\\\\\\            
-//\\/\\/\\        __    /__\\\\\\\\  _,       real estate investment platform
-//\\/\\/\\     __/  \_  |__|_|_|__|   \__,    built with neo4j knowledge graphs
+ /\ /\ /\                /\\\\\\\\            gain a competitive edge
+//\\/\\/\\        __    /__\\\\\\\\  _,       in real estate investing
+//\\/\\/\\     __/  \_  |__|_|_|__|   \__,    with data-driven insights.
  || || ||     '-o---o-' |  |/|\| /|   /\ \
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-gain a competitive edge in real estate trading with data-driven insights.
+check out the report: https://sueszli.github.io/docs/report.pdf
+
+features:
 
 - full fledged parallelized willhaben scraper
-- neo4j market graph database
-- neo4j data science library for embeddings and graph machine learning
+- neo4j knowledge graph
+- neo4j data science library for embeddings and graph ml
 
 usage:
 
